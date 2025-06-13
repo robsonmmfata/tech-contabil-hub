@@ -1,14 +1,16 @@
-
 import React, { useState } from 'react';
-import { Calendar, Clock, AlertTriangle, CheckCircle, FileText, Plus } from 'lucide-react';
+import { Calendar, Clock, AlertTriangle, CheckCircle, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { NovaObrigacaoModal } from "@/components/modals/NovaObrigacaoModal";
+import { useToast } from "@/hooks/use-toast";
 
 const Obrigacoes = () => {
   const [selectedTab, setSelectedTab] = useState("pendentes");
+  const { toast } = useToast();
 
   const obrigacoesPendentes = [
     { id: 1, cliente: "Tech Solutions Ltda", tipo: "DAS", vencimento: "2024-01-15", status: "pendente", valor: "R$ 1.250,00" },
@@ -41,6 +43,20 @@ const Obrigacoes = () => {
     { cliente: "StartupXYZ", obrigacao: "Folha", dias: 12 }
   ];
 
+  const handleConcluir = (obrigacaoId: number) => {
+    toast({
+      title: "Obrigação concluída",
+      description: `Obrigação ID ${obrigacaoId} foi marcada como concluída!`,
+    });
+  };
+
+  const handleVisualizarDocumento = (obrigacaoId: number) => {
+    toast({
+      title: "Visualizar documento",
+      description: `Abrindo documento da obrigação ID: ${obrigacaoId}`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -48,10 +64,7 @@ const Obrigacoes = () => {
           <h1 className="text-3xl font-bold text-gray-900">Obrigações Fiscais</h1>
           <p className="text-gray-500 mt-1">Gerencie prazos e obrigações dos seus clientes</p>
         </div>
-        <Button className="flex items-center space-x-2">
-          <Plus className="h-4 w-4" />
-          <span>Nova Obrigação</span>
-        </Button>
+        <NovaObrigacaoModal />
       </div>
 
       {/* Cards de Resumo */}
@@ -164,10 +177,12 @@ const Obrigacoes = () => {
                       <TableCell>{getStatusBadge(obrigacao.status)}</TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          <Button size="sm" variant="outline">
+                          <Button size="sm" variant="outline" onClick={() => handleVisualizarDocumento(obrigacao.id)}>
                             <FileText className="h-4 w-4" />
                           </Button>
-                          <Button size="sm">Concluir</Button>
+                          <Button size="sm" onClick={() => handleConcluir(obrigacao.id)}>
+                            Concluir
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>

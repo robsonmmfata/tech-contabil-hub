@@ -1,14 +1,17 @@
-
 import React, { useState } from 'react';
-import { DollarSign, TrendingUp, TrendingDown, CreditCard, FileText, Plus, Download } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, CreditCard, FileText, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { FluxoCaixaChart } from "@/components/charts/FluxoCaixaChart";
+import { NovaTransacaoModal } from "@/components/modals/NovaTransacaoModal";
+import { useToast } from "@/hooks/use-toast";
 
 const Financeiro = () => {
   const [selectedTab, setSelectedTab] = useState("receitas");
+  const { toast } = useToast();
 
   const receitas = [
     { id: 1, cliente: "Tech Solutions Ltda", servico: "DAS + Folha", valor: 1850.00, vencimento: "2024-01-15", status: "pago" },
@@ -41,6 +44,27 @@ const Financeiro = () => {
   const lucroLiquido = totalReceitas - totalDespesas;
   const receitasPagas = receitas.filter(r => r.status === 'pago').reduce((sum, receita) => sum + receita.valor, 0);
 
+  const handleExportar = () => {
+    toast({
+      title: "Exportando dados",
+      description: "Relatório financeiro está sendo exportado...",
+    });
+  };
+
+  const handleReceber = (receitaId: number) => {
+    toast({
+      title: "Receita recebida",
+      description: `Receita ID ${receitaId} foi marcada como paga!`,
+    });
+  };
+
+  const handleVisualizarDocumento = (id: number) => {
+    toast({
+      title: "Visualizar documento",
+      description: `Abrindo documento ID: ${id}`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -49,14 +73,11 @@ const Financeiro = () => {
           <p className="text-gray-500 mt-1">Controle financeiro do seu escritório contábil</p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline" className="flex items-center space-x-2">
+          <Button variant="outline" className="flex items-center space-x-2" onClick={handleExportar}>
             <Download className="h-4 w-4" />
             <span>Exportar</span>
           </Button>
-          <Button className="flex items-center space-x-2">
-            <Plus className="h-4 w-4" />
-            <span>Nova Transação</span>
-          </Button>
+          <NovaTransacaoModal />
         </div>
       </div>
 
@@ -117,15 +138,13 @@ const Financeiro = () => {
         </Card>
       </div>
 
-      {/* Gráfico de Fluxo de Caixa (Placeholder) */}
+      {/* Gráfico de Fluxo de Caixa */}
       <Card>
         <CardHeader>
           <CardTitle>Fluxo de Caixa - Janeiro 2024</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-            <p className="text-gray-500">Gráfico de fluxo de caixa será implementado aqui</p>
-          </div>
+          <FluxoCaixaChart />
         </CardContent>
       </Card>
 
@@ -163,11 +182,13 @@ const Financeiro = () => {
                       <TableCell>{getStatusBadge(receita.status)}</TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          <Button size="sm" variant="outline">
+                          <Button size="sm" variant="outline" onClick={() => handleVisualizarDocumento(receita.id)}>
                             <FileText className="h-4 w-4" />
                           </Button>
                           {receita.status !== 'pago' && (
-                            <Button size="sm">Receber</Button>
+                            <Button size="sm" onClick={() => handleReceber(receita.id)}>
+                              Receber
+                            </Button>
                           )}
                         </div>
                       </TableCell>
@@ -198,7 +219,7 @@ const Financeiro = () => {
                       <TableCell>{despesa.data}</TableCell>
                       <TableCell>{getStatusBadge(despesa.status)}</TableCell>
                       <TableCell>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" onClick={() => handleVisualizarDocumento(despesa.id)}>
                           <FileText className="h-4 w-4" />
                         </Button>
                       </TableCell>

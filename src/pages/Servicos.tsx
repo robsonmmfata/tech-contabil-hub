@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, Search, Filter, Eye, Upload, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -7,10 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { NovoServicoModal } from "@/components/modals/NovoServicoModal";
+import { useToast } from "@/hooks/use-toast";
 
 const Servicos = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
+  const { toast } = useToast();
 
   const services = [
     {
@@ -94,6 +96,20 @@ const Servicos = () => {
     }
   };
 
+  const handleView = (serviceId: number) => {
+    toast({
+      title: "Visualizar serviço",
+      description: `Visualizando detalhes do serviço ID: ${serviceId}`,
+    });
+  };
+
+  const handleUpload = (serviceId: number) => {
+    toast({
+      title: "Upload de arquivo",
+      description: `Fazendo upload para o serviço ID: ${serviceId}`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -101,10 +117,7 @@ const Servicos = () => {
           <h1 className="text-3xl font-bold text-gray-900">Serviços Contábeis</h1>
           <p className="text-gray-600 mt-1">Gerencie todos os serviços prestados aos seus clientes</p>
         </div>
-        <Button className="flex items-center space-x-2">
-          <Plus className="h-4 w-4" />
-          <span>Novo Serviço</span>
-        </Button>
+        <NovoServicoModal />
       </div>
 
       {/* Stats Cards */}
@@ -240,11 +253,11 @@ const Servicos = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => handleView(service.id)}>
                           <Eye className="h-4 w-4" />
                         </Button>
                         {service.status === 'pendente' && (
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" onClick={() => handleUpload(service.id)}>
                             <Upload className="h-4 w-4" />
                           </Button>
                         )}

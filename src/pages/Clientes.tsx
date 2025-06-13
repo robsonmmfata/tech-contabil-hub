@@ -1,14 +1,17 @@
 
 import React, { useState } from 'react';
-import { Plus, Search, Filter, Edit, Trash2, Building, User } from 'lucide-react';
+import { Plus, Search, Filter, Edit, Trash2, Building, User, Eye } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { NovoClienteModal } from "@/components/modals/NovoClienteModal";
+import { useToast } from "@/hooks/use-toast";
 
 const Clientes = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const { toast } = useToast();
 
   const clients = [
     {
@@ -60,6 +63,28 @@ const Clientes = () => {
     return type === 'empresa' ? Building : User;
   };
 
+  const handleEdit = (clientId: number) => {
+    toast({
+      title: "Editar cliente",
+      description: `Editando cliente ID: ${clientId}`,
+    });
+  };
+
+  const handleDelete = (clientId: number) => {
+    toast({
+      title: "Cliente removido",
+      description: "Cliente foi removido com sucesso!",
+      variant: "destructive",
+    });
+  };
+
+  const handleView = (clientId: number) => {
+    toast({
+      title: "Visualizar cliente",
+      description: `Visualizando detalhes do cliente ID: ${clientId}`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -67,10 +92,7 @@ const Clientes = () => {
           <h1 className="text-3xl font-bold text-gray-900">Clientes</h1>
           <p className="text-gray-600 mt-1">Gerencie seus clientes e suas informações fiscais</p>
         </div>
-        <Button className="flex items-center space-x-2">
-          <Plus className="h-4 w-4" />
-          <span>Novo Cliente</span>
-        </Button>
+        <NovoClienteModal />
       </div>
 
       {/* Filters */}
@@ -146,10 +168,13 @@ const Clientes = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => handleView(client.id)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(client.id)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                        <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => handleDelete(client.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

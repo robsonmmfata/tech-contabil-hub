@@ -5,8 +5,16 @@ import { StatsCard } from "@/components/StatsCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { NovoClienteModal } from "@/components/modals/NovoClienteModal";
+import { NovoServicoModal } from "@/components/modals/NovoServicoModal";
+import { NovaObrigacaoModal } from "@/components/modals/NovaObrigacaoModal";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
   const upcomingObligations = [
     { id: 1, client: "Tech Solutions LTDA", obligation: "DAS - Simples Nacional", dueDate: "15/06/2025", priority: "high" },
     { id: 2, client: "João Silva ME", obligation: "IRPJ - Lucro Presumido", dueDate: "20/06/2025", priority: "medium" },
@@ -35,6 +43,13 @@ const Dashboard = () => {
       case 'pendente': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const handleGerarBoleto = () => {
+    toast({
+      title: "Boleto gerado",
+      description: "Boleto foi gerado com sucesso!",
+    });
   };
 
   return (
@@ -87,7 +102,9 @@ const Dashboard = () => {
               <AlertTriangle className="h-5 w-5 text-orange-500" />
               <span>Obrigações Próximas</span>
             </CardTitle>
-            <Button variant="outline" size="sm">Ver Todas</Button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/obrigacoes')}>
+              Ver Todas
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -115,7 +132,9 @@ const Dashboard = () => {
               <CheckCircle className="h-5 w-5 text-green-500" />
               <span>Serviços Recentes</span>
             </CardTitle>
-            <Button variant="outline" size="sm">Ver Todos</Button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/servicos')}>
+              Ver Todos
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -144,19 +163,10 @@ const Dashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button className="h-20 flex flex-col space-y-2" variant="outline">
-              <Users className="h-6 w-6" />
-              <span className="text-sm">Novo Cliente</span>
-            </Button>
-            <Button className="h-20 flex flex-col space-y-2" variant="outline">
-              <FileText className="h-6 w-6" />
-              <span className="text-sm">Novo Serviço</span>
-            </Button>
-            <Button className="h-20 flex flex-col space-y-2" variant="outline">
-              <Calendar className="h-6 w-6" />
-              <span className="text-sm">Agendar Obrigação</span>
-            </Button>
-            <Button className="h-20 flex flex-col space-y-2" variant="outline">
+            <NovoClienteModal />
+            <NovoServicoModal />
+            <NovaObrigacaoModal />
+            <Button className="h-20 flex flex-col space-y-2" variant="outline" onClick={handleGerarBoleto}>
               <DollarSign className="h-6 w-6" />
               <span className="text-sm">Gerar Boleto</span>
             </Button>

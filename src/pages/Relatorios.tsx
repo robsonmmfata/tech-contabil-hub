@@ -1,14 +1,17 @@
-
 import React, { useState } from 'react';
 import { BarChart3, FileText, Download, Calendar, Filter, TrendingUp, PieChart } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ReceitasMensaisChart } from "@/components/charts/ReceitasMensaisChart";
+import { ServicosPieChart } from "@/components/charts/ServicosPieChart";
+import { useToast } from "@/hooks/use-toast";
 
 const Relatorios = () => {
   const [selectedPeriod, setSelectedPeriod] = useState("mes-atual");
   const [selectedTab, setSelectedTab] = useState("financeiros");
+  const { toast } = useToast();
 
   const relatoriosFinanceiros = [
     {
@@ -87,6 +90,20 @@ const Relatorios = () => {
     servicosRealizados: 48,
     receitaMensal: 25850.00,
     obrigacoesPendentes: 7
+  };
+
+  const handleVisualizarRelatorio = (nomeRelatorio: string) => {
+    toast({
+      title: "Visualizar relatório",
+      description: `Abrindo relatório: ${nomeRelatorio}`,
+    });
+  };
+
+  const handleExportarRelatorio = (nomeRelatorio: string) => {
+    toast({
+      title: "Exportando relatório",
+      description: `Exportando: ${nomeRelatorio}`,
+    });
   };
 
   return (
@@ -172,16 +189,14 @@ const Relatorios = () => {
         </Card>
       </div>
 
-      {/* Gráficos (Placeholder) */}
+      {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Receitas por Mês</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-              <p className="text-gray-500">Gráfico de receitas mensais</p>
-            </div>
+            <ReceitasMensaisChart />
           </CardContent>
         </Card>
 
@@ -190,9 +205,7 @@ const Relatorios = () => {
             <CardTitle>Serviços Mais Solicitados</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-              <p className="text-gray-500">Gráfico de distribuição de serviços</p>
-            </div>
+            <ServicosPieChart />
           </CardContent>
         </Card>
       </div>
@@ -223,10 +236,10 @@ const Relatorios = () => {
                       </div>
                     </div>
                     <div className="flex space-x-2 ml-4">
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => handleVisualizarRelatorio(relatorio.nome)}>
                         <FileText className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" className="flex items-center space-x-1">
+                      <Button size="sm" className="flex items-center space-x-1" onClick={() => handleExportarRelatorio(relatorio.nome)}>
                         <Download className="h-4 w-4" />
                         <span>Exportar</span>
                       </Button>
@@ -249,10 +262,10 @@ const Relatorios = () => {
                       </div>
                     </div>
                     <div className="flex space-x-2 ml-4">
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => handleVisualizarRelatorio(relatorio.nome)}>
                         <FileText className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" className="flex items-center space-x-1">
+                      <Button size="sm" className="flex items-center space-x-1" onClick={() => handleExportarRelatorio(relatorio.nome)}>
                         <Download className="h-4 w-4" />
                         <span>Exportar</span>
                       </Button>
@@ -275,10 +288,10 @@ const Relatorios = () => {
                       </div>
                     </div>
                     <div className="flex space-x-2 ml-4">
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => handleVisualizarRelatorio(relatorio.nome)}>
                         <FileText className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" className="flex items-center space-x-1">
+                      <Button size="sm" className="flex items-center space-x-1" onClick={() => handleExportarRelatorio(relatorio.nome)}>
                         <Download className="h-4 w-4" />
                         <span>Exportar</span>
                       </Button>

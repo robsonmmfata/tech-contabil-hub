@@ -1,17 +1,17 @@
-
 import React, { useState } from 'react';
-import { FileText, Upload, Download, Search, Filter, Folder, File, Eye, Trash2, Plus } from 'lucide-react';
+import { FileText, Upload, Download, Search, Filter, Folder, File, Eye, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FileUpload } from "@/components/FileUpload";
+import { useToast } from "@/hooks/use-toast";
 
 const Documentos = () => {
-  const [selectedTab, setSelectedTab] = useState("todos");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("todas");
+  const { toast } = useToast();
 
   const documentos = [
     {
@@ -106,6 +106,36 @@ const Documentos = () => {
     const matchCategory = selectedCategory === "todas" || doc.categoria === selectedCategory;
     return matchSearch && matchCategory;
   });
+
+  const handleFileUpload = (files: File[]) => {
+    console.log('Files uploaded:', files);
+    toast({
+      title: "Upload realizado",
+      description: `${files.length} arquivo(s) enviado(s) com sucesso!`,
+    });
+  };
+
+  const handleVisualizarDocumento = (documentoId: number) => {
+    toast({
+      title: "Visualizar documento",
+      description: `Abrindo documento ID: ${documentoId}`,
+    });
+  };
+
+  const handleDownloadDocumento = (documentoId: number) => {
+    toast({
+      title: "Download iniciado",
+      description: `Baixando documento ID: ${documentoId}`,
+    });
+  };
+
+  const handleDeletarDocumento = (documentoId: number) => {
+    toast({
+      title: "Documento excluído",
+      description: `Documento ID ${documentoId} foi excluído!`,
+      variant: "destructive",
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -202,13 +232,13 @@ const Documentos = () => {
                 <div className="flex items-center space-x-2">
                   {getStatusBadge(documento.status)}
                   <div className="flex space-x-1 ml-4">
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={() => handleVisualizarDocumento(documento.id)}>
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={() => handleDownloadDocumento(documento.id)}>
                       <Download className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
+                    <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700" onClick={() => handleDeletarDocumento(documento.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -230,15 +260,7 @@ const Documentos = () => {
       {/* Área de Upload (Drag & Drop) */}
       <Card>
         <CardContent className="p-8">
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-gray-400 transition-colors">
-            <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Arraste e solte seus arquivos aqui</h3>
-            <p className="text-gray-500 mb-4">ou clique para selecionar arquivos</p>
-            <Button variant="outline">Selecionar Arquivos</Button>
-            <p className="text-xs text-gray-400 mt-4">
-              Suporte para PDF, XML, Excel, Word (máx. 10MB por arquivo)
-            </p>
-          </div>
+          <FileUpload onFileUpload={handleFileUpload} />
         </CardContent>
       </Card>
     </div>
