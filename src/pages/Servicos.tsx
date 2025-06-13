@@ -1,0 +1,264 @@
+
+import React, { useState } from 'react';
+import { Plus, Search, Filter, Eye, Upload, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const Servicos = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('todos');
+
+  const services = [
+    {
+      id: 1,
+      client: "Tech Solutions LTDA",
+      type: "DAS",
+      description: "DAS - Simples Nacional Junho/2025",
+      competence: "06/2025",
+      dueDate: "20/06/2025",
+      status: "pendente",
+      value: 1250.00,
+      createdAt: "10/06/2025"
+    },
+    {
+      id: 2,
+      client: "João Silva ME",
+      type: "Folha",
+      description: "Folha de Pagamento Junho/2025",
+      competence: "06/2025",
+      dueDate: "07/07/2025",
+      status: "processando",
+      value: 800.00,
+      createdAt: "09/06/2025"
+    },
+    {
+      id: 3,
+      client: "Digital Agency",
+      type: "IRPJ",
+      description: "IRPJ - 2º Trimestre 2025",
+      competence: "2T/2025",
+      dueDate: "31/07/2025",
+      status: "concluido",
+      value: 2100.00,
+      createdAt: "05/06/2025"
+    },
+    {
+      id: 4,
+      client: "StartupXYZ",
+      type: "Obrigação Acessória",
+      description: "DEFIS 2024",
+      competence: "2024",
+      dueDate: "31/05/2025",
+      status: "atrasado",
+      value: 600.00,
+      createdAt: "01/05/2025"
+    }
+  ];
+
+  const filteredServices = services.filter(service => {
+    const matchesSearch = service.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         service.type.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'todos' || service.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case 'pendente':
+        return { color: 'bg-gray-100 text-gray-800', icon: Clock, label: 'Pendente' };
+      case 'processando':
+        return { color: 'bg-yellow-100 text-yellow-800', icon: AlertCircle, label: 'Processando' };
+      case 'concluido':
+        return { color: 'bg-green-100 text-green-800', icon: CheckCircle, label: 'Concluído' };
+      case 'atrasado':
+        return { color: 'bg-red-100 text-red-800', icon: AlertCircle, label: 'Atrasado' };
+      default:
+        return { color: 'bg-gray-100 text-gray-800', icon: Clock, label: 'Pendente' };
+    }
+  };
+
+  const getServiceTypeColor = (type: string) => {
+    switch (type) {
+      case 'DAS': return 'bg-blue-100 text-blue-800';
+      case 'IRPJ': return 'bg-purple-100 text-purple-800';
+      case 'Folha': return 'bg-green-100 text-green-800';
+      case 'Obrigação Acessória': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Serviços Contábeis</h1>
+          <p className="text-gray-600 mt-1">Gerencie todos os serviços prestados aos seus clientes</p>
+        </div>
+        <Button className="flex items-center space-x-2">
+          <Plus className="h-4 w-4" />
+          <span>Novo Serviço</span>
+        </Button>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-gray-700">
+                {services.filter(s => s.status === 'pendente').length}
+              </p>
+              <p className="text-sm text-gray-500">Pendentes</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-yellow-600">
+                {services.filter(s => s.status === 'processando').length}
+              </p>
+              <p className="text-sm text-gray-500">Processando</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-green-600">
+                {services.filter(s => s.status === 'concluido').length}
+              </p>
+              <p className="text-sm text-gray-500">Concluídos</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-red-600">
+                {services.filter(s => s.status === 'atrasado').length}
+              </p>
+              <p className="text-sm text-gray-500">Atrasados</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Buscar por cliente, tipo de serviço..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="pendente">Pendentes</SelectItem>
+                <SelectItem value="processando">Processando</SelectItem>
+                <SelectItem value="concluido">Concluídos</SelectItem>
+                <SelectItem value="atrasado">Atrasados</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Services Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Lista de Serviços ({filteredServices.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Serviço</TableHead>
+                <TableHead>Competência</TableHead>
+                <TableHead>Vencimento</TableHead>
+                <TableHead>Valor</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredServices.map((service) => {
+                const statusConfig = getStatusConfig(service.status);
+                const StatusIcon = statusConfig.icon;
+                
+                return (
+                  <TableRow key={service.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium text-gray-900">{service.client}</p>
+                        <p className="text-xs text-gray-500">Criado em {service.createdAt}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="flex items-center space-x-2 mb-1">
+                          <Badge className={getServiceTypeColor(service.type)}>
+                            {service.type}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-600">{service.description}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">{service.competence}</TableCell>
+                    <TableCell>
+                      <span className={`text-sm ${service.status === 'atrasado' ? 'text-red-600 font-medium' : 'text-gray-600'}`}>
+                        {service.dueDate}
+                      </span>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      R$ {service.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${statusConfig.color}`}>
+                          <StatusIcon className="h-3 w-3" />
+                          <span>{statusConfig.label}</span>
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Button variant="ghost" size="sm">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        {service.status === 'pendente' && (
+                          <Button variant="ghost" size="sm">
+                            <Upload className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default Servicos;
