@@ -1,0 +1,217 @@
+
+import React, { useState } from 'react';
+import { DollarSign, TrendingUp, TrendingDown, CreditCard, FileText, Plus, Download } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+const Financeiro = () => {
+  const [selectedTab, setSelectedTab] = useState("receitas");
+
+  const receitas = [
+    { id: 1, cliente: "Tech Solutions Ltda", servico: "DAS + Folha", valor: 1850.00, vencimento: "2024-01-15", status: "pago" },
+    { id: 2, cliente: "DevCorp", servico: "IRPJ", valor: 3500.00, vencimento: "2024-01-20", status: "pendente" },
+    { id: 3, cliente: "StartupXYZ", servico: "Consultoria", valor: 2200.00, vencimento: "2024-01-25", status: "atrasado" },
+    { id: 4, cliente: "CodeMaster", servico: "Contabilidade Mensal", valor: 1200.00, vencimento: "2024-01-30", status: "pago" }
+  ];
+
+  const despesas = [
+    { id: 1, descricao: "Software Contábil", categoria: "Tecnologia", valor: 450.00, data: "2024-01-05", status: "pago" },
+    { id: 2, descricao: "Certificado Digital", categoria: "Certificações", valor: 180.00, data: "2024-01-10", status: "pago" },
+    { id: 3, descricao: "Marketing Digital", categoria: "Marketing", valor: 800.00, data: "2024-01-15", status: "pendente" }
+  ];
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pago':
+        return <Badge variant="default" className="bg-green-50 text-green-700 border-green-200">Pago</Badge>;
+      case 'pendente':
+        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pendente</Badge>;
+      case 'atrasado':
+        return <Badge variant="destructive">Atrasado</Badge>;
+      default:
+        return <Badge variant="outline">Desconhecido</Badge>;
+    }
+  };
+
+  const totalReceitas = receitas.reduce((sum, receita) => sum + receita.valor, 0);
+  const totalDespesas = despesas.reduce((sum, despesa) => sum + despesa.valor, 0);
+  const lucroLiquido = totalReceitas - totalDespesas;
+  const receitasPagas = receitas.filter(r => r.status === 'pago').reduce((sum, receita) => sum + receita.valor, 0);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Financeiro</h1>
+          <p className="text-gray-500 mt-1">Controle financeiro do seu escritório contábil</p>
+        </div>
+        <div className="flex space-x-2">
+          <Button variant="outline" className="flex items-center space-x-2">
+            <Download className="h-4 w-4" />
+            <span>Exportar</span>
+          </Button>
+          <Button className="flex items-center space-x-2">
+            <Plus className="h-4 w-4" />
+            <span>Nova Transação</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Cards de Resumo Financeiro */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Receitas Totais</p>
+                <p className="text-2xl font-bold text-green-600">R$ {totalReceitas.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                <p className="text-sm text-green-600 mt-1">+12% vs mês anterior</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Receitas Recebidas</p>
+                <p className="text-2xl font-bold text-blue-600">R$ {receitasPagas.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                <p className="text-sm text-blue-600 mt-1">67% do total</p>
+              </div>
+              <DollarSign className="h-8 w-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Despesas</p>
+                <p className="text-2xl font-bold text-red-600">R$ {totalDespesas.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                <p className="text-sm text-red-600 mt-1">-5% vs mês anterior</p>
+              </div>
+              <TrendingDown className="h-8 w-8 text-red-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Lucro Líquido</p>
+                <p className={`text-2xl font-bold ${lucroLiquido >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  R$ {lucroLiquido.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                </p>
+                <p className="text-sm text-green-600 mt-1">Margem: {((lucroLiquido/totalReceitas)*100).toFixed(1)}%</p>
+              </div>
+              <CreditCard className="h-8 w-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Gráfico de Fluxo de Caixa (Placeholder) */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Fluxo de Caixa - Janeiro 2024</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
+            <p className="text-gray-500">Gráfico de fluxo de caixa será implementado aqui</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tabelas de Receitas e Despesas */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Movimentação Financeira</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="receitas">Receitas</TabsTrigger>
+              <TabsTrigger value="despesas">Despesas</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="receitas" className="mt-6">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Serviço</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Vencimento</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {receitas.map((receita) => (
+                    <TableRow key={receita.id}>
+                      <TableCell className="font-medium">{receita.cliente}</TableCell>
+                      <TableCell>{receita.servico}</TableCell>
+                      <TableCell>R$ {receita.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</TableCell>
+                      <TableCell>{receita.vencimento}</TableCell>
+                      <TableCell>{getStatusBadge(receita.status)}</TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button size="sm" variant="outline">
+                            <FileText className="h-4 w-4" />
+                          </Button>
+                          {receita.status !== 'pago' && (
+                            <Button size="sm">Receber</Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TabsContent>
+            
+            <TabsContent value="despesas" className="mt-6">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {despesas.map((despesa) => (
+                    <TableRow key={despesa.id}>
+                      <TableCell className="font-medium">{despesa.descricao}</TableCell>
+                      <TableCell>{despesa.categoria}</TableCell>
+                      <TableCell>R$ {despesa.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</TableCell>
+                      <TableCell>{despesa.data}</TableCell>
+                      <TableCell>{getStatusBadge(despesa.status)}</TableCell>
+                      <TableCell>
+                        <Button size="sm" variant="outline">
+                          <FileText className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default Financeiro;

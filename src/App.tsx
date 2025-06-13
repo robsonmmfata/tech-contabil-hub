@@ -8,6 +8,10 @@ import { Layout } from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Clientes from "./pages/Clientes";
 import Servicos from "./pages/Servicos";
+import Obrigacoes from "./pages/Obrigacoes";
+import Financeiro from "./pages/Financeiro";
+import Relatorios from "./pages/Relatorios";
+import Documentos from "./pages/Documentos";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,10 +27,10 @@ const App = () => (
             <Route path="/" element={<Dashboard />} />
             <Route path="/clientes" element={<Clientes />} />
             <Route path="/servicos" element={<Servicos />} />
-            <Route path="/obrigacoes" element={<div className="p-6"><h1 className="text-2xl font-bold">Obrigações - Em desenvolvimento</h1></div>} />
-            <Route path="/financeiro" element={<div className="p-6"><h1 className="text-2xl font-bold">Financeiro - Em desenvolvimento</h1></div>} />
-            <Route path="/relatorios" element={<div className="p-6"><h1 className="text-2xl font-bold">Relatórios - Em desenvolvimento</h1></div>} />
-            <Route path="/documentos" element={<div className="p-6"><h1 className="text-2xl font-bold">Documentos - Em desenvolvimento</h1></div>} />
+            <Route path="/obrigacoes" element={<Obrigacoes />} />
+            <Route path="/financeiro" element={<Financeiro />} />
+            <Route path="/relatorios" element={<Relatorios />} />
+            <Route path="/documentos" element={<Documentos />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>

@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { Bell, Search, User } from 'lucide-react';
+import { Bell, Search } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { UserProfile } from "./UserProfile";
 
 export const Header = () => {
   return (
@@ -27,10 +28,7 @@ export const Header = () => {
           </span>
         </Button>
         
-        <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-          <User className="h-5 w-5" />
-          <span className="text-sm">Contador</span>
-        </Button>
+        <UserProfile />
       </div>
     </header>
   );
