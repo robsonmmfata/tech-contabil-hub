@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { NovoClienteModal } from "@/components/modals/NovoClienteModal";
 import { NovoServicoModal } from "@/components/modals/NovoServicoModal";
 import { NovaObrigacaoModal } from "@/components/modals/NovaObrigacaoModal";
+import { NovaTransacaoModal } from "@/components/modals/NovaTransacaoModal";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -166,10 +167,7 @@ const Dashboard = () => {
             <NovoClienteModal />
             <NovoServicoModal />
             <NovaObrigacaoModal />
-            <Button className="h-20 flex flex-col space-y-2" variant="outline" onClick={handleGerarBoleto}>
-              <DollarSign className="h-6 w-6" />
-              <span className="text-sm">Gerar Boleto</span>
-            </Button>
+            <NovaTransacaoModal />
           </div>
         </CardContent>
       </Card>

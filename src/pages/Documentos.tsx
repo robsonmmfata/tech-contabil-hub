@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { FileText, Upload, Download, Search, Filter, Folder, File, Eye, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -144,7 +145,7 @@ const Documentos = () => {
           <h1 className="text-3xl font-bold text-gray-900">Documentos</h1>
           <p className="text-gray-500 mt-1">Central de documentos e arquivos dos clientes</p>
         </div>
-        <Button className="flex items-center space-x-2">
+        <Button className="flex items-center space-x-2" onClick={() => toast({ title: "Upload", description: "Use a área de upload abaixo" })}>
           <Upload className="h-4 w-4" />
           <span>Upload de Documentos</span>
         </Button>

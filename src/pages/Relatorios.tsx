@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { BarChart3, FileText, Download, Calendar, Filter, TrendingUp, PieChart } from 'lucide-react';
+import { BarChart3, PieChart, FileText, Download, Calendar, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,100 +10,45 @@ import { ServicosPieChart } from "@/components/charts/ServicosPieChart";
 import { useToast } from "@/hooks/use-toast";
 
 const Relatorios = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState("mes-atual");
-  const [selectedTab, setSelectedTab] = useState("financeiros");
+  const [periodo, setPeriodo] = useState("2024");
   const { toast } = useToast();
 
-  const relatoriosFinanceiros = [
-    {
-      nome: "Receitas por Cliente",
-      descricao: "Análise detalhada das receitas geradas por cada cliente",
-      tipo: "Financeiro",
-      periodo: "Mensal",
-      ultimaAtualizacao: "01/01/2024"
-    },
-    {
-      nome: "Fluxo de Caixa",
-      descricao: "Relatório completo de entradas e saídas do período",
-      tipo: "Financeiro",
-      periodo: "Mensal",
-      ultimaAtualizacao: "01/01/2024"
-    },
-    {
-      nome: "Margem de Lucro por Serviço",
-      descricao: "Análise da rentabilidade de cada tipo de serviço oferecido",
-      tipo: "Financeiro",
-      periodo: "Trimestral",
-      ultimaAtualizacao: "01/01/2024"
-    }
-  ];
-
-  const relatoriosObrigacoes = [
-    {
-      nome: "Obrigações Cumpridas",
-      descricao: "Relatório de todas as obrigações fiscais cumpridas no período",
-      tipo: "Fiscal",
-      periodo: "Mensal",
-      ultimaAtualizacao: "01/01/2024"
-    },
-    {
-      nome: "Prazos em Atraso",
-      descricao: "Listagem de obrigações que venceram e não foram cumpridas",
-      tipo: "Fiscal",
-      periodo: "Semanal",
-      ultimaAtualizacao: "01/01/2024"
-    },
-    {
-      nome: "Calendário Fiscal",
-      descricao: "Cronograma completo de obrigações por cliente e período",
-      tipo: "Fiscal",
-      periodo: "Anual",
-      ultimaAtualizacao: "01/01/2024"
-    }
-  ];
-
-  const relatoriosClientes = [
-    {
-      nome: "Portfólio de Clientes",
-      descricao: "Relatório completo com informações de todos os clientes ativos",
-      tipo: "Gestão",
-      periodo: "Mensal",
-      ultimaAtualizacao: "01/01/2024"
-    },
-    {
-      nome: "Serviços por Cliente",
-      descricao: "Detalhamento dos serviços contratados por cada cliente",
-      tipo: "Gestão",
-      periodo: "Mensal",
-      ultimaAtualizacao: "01/01/2024"
-    },
-    {
-      nome: "Histórico de Relacionamento",
-      descricao: "Timeline de interações e serviços prestados",
-      tipo: "Gestão",
-      periodo: "Semestral",
-      ultimaAtualizacao: "01/01/2024"
-    }
-  ];
-
-  const estatisticasRapidas = {
-    totalClientes: 15,
-    servicosRealizados: 48,
-    receitaMensal: 25850.00,
-    obrigacoesPendentes: 7
+  const relatoriosDisponiveis = {
+    financeiros: [
+      { id: 1, nome: "Receitas vs Despesas", descricao: "Comparativo mensal", periodo: "Janeiro 2024" },
+      { id: 2, nome: "Fluxo de Caixa", descricao: "Movimentação financeira", periodo: "Janeiro 2024" },
+      { id: 3, nome: "Faturamento por Cliente", descricao: "Ranking de clientes", periodo: "Janeiro 2024" }
+    ],
+    obrigacoes: [
+      { id: 4, nome: "Obrigações Cumpridas", descricao: "Status das obrigações", periodo: "Janeiro 2024" },
+      { id: 5, nome: "Prazos em Atraso", descricao: "Obrigações pendentes", periodo: "Janeiro 2024" },
+      { id: 6, nome: "Calendário Fiscal", descricao: "Próximos vencimentos", periodo: "Fevereiro 2024" }
+    ],
+    clientes: [
+      { id: 7, nome: "Relatório de Clientes", descricao: "Lista completa de clientes", periodo: "Atual" },
+      { id: 8, nome: "Clientes por Regime", descricao: "Distribuição por regime tributário", periodo: "Atual" },
+      { id: 9, nome: "Histórico de Serviços", descricao: "Serviços prestados por cliente", periodo: "Janeiro 2024" }
+    ]
   };
 
-  const handleVisualizarRelatorio = (nomeRelatorio: string) => {
+  const handleGerarRelatorio = (relatorioId: number) => {
     toast({
-      title: "Visualizar relatório",
-      description: `Abrindo relatório: ${nomeRelatorio}`,
+      title: "Gerando relatório",
+      description: `Relatório ID ${relatorioId} está sendo gerado...`,
     });
   };
 
-  const handleExportarRelatorio = (nomeRelatorio: string) => {
+  const handleDownloadRelatorio = (relatorioId: number) => {
     toast({
-      title: "Exportando relatório",
-      description: `Exportando: ${nomeRelatorio}`,
+      title: "Download iniciado",
+      description: `Baixando relatório ID ${relatorioId}`,
+    });
+  };
+
+  const handleExportarGrafico = (tipo: string) => {
+    toast({
+      title: "Exportando gráfico",
+      description: `Gráfico ${tipo} está sendo exportado...`,
     });
   };
 
@@ -111,49 +57,35 @@ const Relatorios = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Relatórios</h1>
-          <p className="text-gray-500 mt-1">Análises e relatórios gerenciais do seu escritório</p>
+          <p className="text-gray-500 mt-1">Análises e relatórios do seu negócio contábil</p>
         </div>
-        <div className="flex space-x-2">
-          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+        <div className="flex items-center space-x-4">
+          <Select value={periodo} onValueChange={setPeriodo}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Período" />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="mes-atual">Mês Atual</SelectItem>
-              <SelectItem value="trimestre">Trimestre</SelectItem>
-              <SelectItem value="semestre">Semestre</SelectItem>
-              <SelectItem value="ano">Ano</SelectItem>
+              <SelectItem value="2024">2024</SelectItem>
+              <SelectItem value="2023">2023</SelectItem>
+              <SelectItem value="2022">2022</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" className="flex items-center space-x-2">
-            <Filter className="h-4 w-4" />
-            <span>Filtros</span>
+          <Button className="flex items-center space-x-2">
+            <Calendar className="h-4 w-4" />
+            <span>Período Personalizado</span>
           </Button>
         </div>
       </div>
 
-      {/* Cards de Estatísticas Rápidas */}
+      {/* Dashboard Analítico */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Total de Clientes</p>
-                <p className="text-2xl font-bold text-blue-600">{estatisticasRapidas.totalClientes}</p>
-                <p className="text-sm text-green-600 mt-1">+3 este mês</p>
-              </div>
-              <BarChart3 className="h-8 w-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Serviços Realizados</p>
-                <p className="text-2xl font-bold text-green-600">{estatisticasRapidas.servicosRealizados}</p>
-                <p className="text-sm text-green-600 mt-1">+15% vs mês anterior</p>
+                <p className="text-sm font-medium text-gray-500">Receita Total</p>
+                <p className="text-2xl font-bold text-green-600">R$ 186.400</p>
+                <p className="text-sm text-green-600 mt-1">+12% vs período anterior</p>
               </div>
               <TrendingUp className="h-8 w-8 text-green-600" />
             </div>
@@ -164,11 +96,22 @@ const Relatorios = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Receita Mensal</p>
-                <p className="text-2xl font-bold text-purple-600">
-                  R$ {estatisticasRapidas.receitaMensal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
-                </p>
-                <p className="text-sm text-green-600 mt-1">+8% vs mês anterior</p>
+                <p className="text-sm font-medium text-gray-500">Serviços Prestados</p>
+                <p className="text-2xl font-bold text-blue-600">147</p>
+                <p className="text-sm text-blue-600 mt-1">+8% vs período anterior</p>
+              </div>
+              <BarChart3 className="h-8 w-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Obrigações Cumpridas</p>
+                <p className="text-2xl font-bold text-purple-600">98%</p>
+                <p className="text-sm text-purple-600 mt-1">Excelente desempenho</p>
               </div>
               <PieChart className="h-8 w-8 text-purple-600" />
             </div>
@@ -179,21 +122,25 @@ const Relatorios = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Obrigações Pendentes</p>
-                <p className="text-2xl font-bold text-orange-600">{estatisticasRapidas.obrigacoesPendentes}</p>
-                <p className="text-sm text-red-600 mt-1">2 em atraso</p>
+                <p className="text-sm font-medium text-gray-500">Clientes Ativos</p>
+                <p className="text-2xl font-bold text-orange-600">47</p>
+                <p className="text-sm text-orange-600 mt-1">+3 novos clientes</p>
               </div>
-              <Calendar className="h-8 w-8 text-orange-600" />
+              <FileText className="h-8 w-8 text-orange-600" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Gráficos */}
+      {/* Gráficos Principais */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Receitas por Mês</CardTitle>
+            <Button variant="outline" size="sm" onClick={() => handleExportarGrafico('receitas')}>
+              <Download className="h-4 w-4 mr-2" />
+              Exportar
+            </Button>
           </CardHeader>
           <CardContent>
             <ReceitasMensaisChart />
@@ -201,8 +148,12 @@ const Relatorios = () => {
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Serviços Mais Solicitados</CardTitle>
+            <Button variant="outline" size="sm" onClick={() => handleExportarGrafico('servicos')}>
+              <Download className="h-4 w-4 mr-2" />
+              Exportar
+            </Button>
           </CardHeader>
           <CardContent>
             <ServicosPieChart />
@@ -210,13 +161,13 @@ const Relatorios = () => {
         </Card>
       </div>
 
-      {/* Lista de Relatórios */}
+      {/* Relatórios Disponíveis */}
       <Card>
         <CardHeader>
           <CardTitle>Relatórios Disponíveis</CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+          <Tabs defaultValue="financeiros">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="financeiros">Financeiros</TabsTrigger>
               <TabsTrigger value="obrigacoes">Obrigações</TabsTrigger>
@@ -224,24 +175,21 @@ const Relatorios = () => {
             </TabsList>
             
             <TabsContent value="financeiros" className="mt-6">
-              <div className="grid gap-4">
-                {relatoriosFinanceiros.map((relatorio, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">{relatorio.nome}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{relatorio.descricao}</p>
-                      <div className="flex space-x-4 mt-2">
-                        <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">{relatorio.tipo}</span>
-                        <span className="text-xs text-gray-600">Atualizado: {relatorio.ultimaAtualizacao}</span>
-                      </div>
+              <div className="space-y-4">
+                {relatoriosDisponiveis.financeiros.map((relatorio) => (
+                  <div key={relatorio.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <h3 className="font-medium text-gray-900">{relatorio.nome}</h3>
+                      <p className="text-sm text-gray-600">{relatorio.descricao}</p>
+                      <p className="text-xs text-gray-500 mt-1">Período: {relatorio.periodo}</p>
                     </div>
-                    <div className="flex space-x-2 ml-4">
-                      <Button size="sm" variant="outline" onClick={() => handleVisualizarRelatorio(relatorio.nome)}>
-                        <FileText className="h-4 w-4" />
+                    <div className="flex space-x-2">
+                      <Button size="sm" variant="outline" onClick={() => handleGerarRelatorio(relatorio.id)}>
+                        Gerar
                       </Button>
-                      <Button size="sm" className="flex items-center space-x-1" onClick={() => handleExportarRelatorio(relatorio.nome)}>
-                        <Download className="h-4 w-4" />
-                        <span>Exportar</span>
+                      <Button size="sm" onClick={() => handleDownloadRelatorio(relatorio.id)}>
+                        <Download className="h-4 w-4 mr-2" />
+                        PDF
                       </Button>
                     </div>
                   </div>
@@ -250,24 +198,21 @@ const Relatorios = () => {
             </TabsContent>
             
             <TabsContent value="obrigacoes" className="mt-6">
-              <div className="grid gap-4">
-                {relatoriosObrigacoes.map((relatorio, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">{relatorio.nome}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{relatorio.descricao}</p>
-                      <div className="flex space-x-4 mt-2">
-                        <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">{relatorio.tipo}</span>
-                        <span className="text-xs text-gray-600">Atualizado: {relatorio.ultimaAtualizacao}</span>
-                      </div>
+              <div className="space-y-4">
+                {relatoriosDisponiveis.obrigacoes.map((relatorio) => (
+                  <div key={relatorio.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <h3 className="font-medium text-gray-900">{relatorio.nome}</h3>
+                      <p className="text-sm text-gray-600">{relatorio.descricao}</p>
+                      <p className="text-xs text-gray-500 mt-1">Período: {relatorio.periodo}</p>
                     </div>
-                    <div className="flex space-x-2 ml-4">
-                      <Button size="sm" variant="outline" onClick={() => handleVisualizarRelatorio(relatorio.nome)}>
-                        <FileText className="h-4 w-4" />
+                    <div className="flex space-x-2">
+                      <Button size="sm" variant="outline" onClick={() => handleGerarRelatorio(relatorio.id)}>
+                        Gerar
                       </Button>
-                      <Button size="sm" className="flex items-center space-x-1" onClick={() => handleExportarRelatorio(relatorio.nome)}>
-                        <Download className="h-4 w-4" />
-                        <span>Exportar</span>
+                      <Button size="sm" onClick={() => handleDownloadRelatorio(relatorio.id)}>
+                        <Download className="h-4 w-4 mr-2" />
+                        PDF
                       </Button>
                     </div>
                   </div>
@@ -276,24 +221,21 @@ const Relatorios = () => {
             </TabsContent>
             
             <TabsContent value="clientes" className="mt-6">
-              <div className="grid gap-4">
-                {relatoriosClientes.map((relatorio, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">{relatorio.nome}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{relatorio.descricao}</p>
-                      <div className="flex space-x-4 mt-2">
-                        <span className="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded">{relatorio.tipo}</span>
-                        <span className="text-xs text-gray-600">Atualizado: {relatorio.ultimaAtualizacao}</span>
-                      </div>
+              <div className="space-y-4">
+                {relatoriosDisponiveis.clientes.map((relatorio) => (
+                  <div key={relatorio.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <h3 className="font-medium text-gray-900">{relatorio.nome}</h3>
+                      <p className="text-sm text-gray-600">{relatorio.descricao}</p>
+                      <p className="text-xs text-gray-500 mt-1">Período: {relatorio.periodo}</p>
                     </div>
-                    <div className="flex space-x-2 ml-4">
-                      <Button size="sm" variant="outline" onClick={() => handleVisualizarRelatorio(relatorio.nome)}>
-                        <FileText className="h-4 w-4" />
+                    <div className="flex space-x-2">
+                      <Button size="sm" variant="outline" onClick={() => handleGerarRelatorio(relatorio.id)}>
+                        Gerar
                       </Button>
-                      <Button size="sm" className="flex items-center space-x-1" onClick={() => handleExportarRelatorio(relatorio.nome)}>
-                        <Download className="h-4 w-4" />
-                        <span>Exportar</span>
+                      <Button size="sm" onClick={() => handleDownloadRelatorio(relatorio.id)}>
+                        <Download className="h-4 w-4 mr-2" />
+                        PDF
                       </Button>
                     </div>
                   </div>

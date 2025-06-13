@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus } from 'lucide-react';
+import { DollarSign } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 export const NovaTransacaoModal = () => {
@@ -42,9 +42,9 @@ export const NovaTransacaoModal = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="flex items-center space-x-2">
-          <Plus className="h-4 w-4" />
-          <span>Nova Transação</span>
+        <Button className="h-20 flex flex-col space-y-2">
+          <DollarSign className="h-6 w-6" />
+          <span className="text-sm">Nova Transação</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
