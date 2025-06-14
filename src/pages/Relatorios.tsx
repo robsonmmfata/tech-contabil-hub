@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { BarChart3, PieChart, FileText, Download, Calendar, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +10,11 @@ import { useToast } from "@/hooks/use-toast";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { format, isValid } from "date-fns";
+import ptBR from "date-fns/locale/pt-BR";
 
 const receitasMensaisData = [
   { mes: 'Jan', valor: 28400 },
@@ -48,9 +52,11 @@ const relatoriosDisponiveis = {
 };
 
 const Relatorios = () => {
-  const [periodo, setPeriodo] = useState("2024");
+  const [periodo, setPeriodo] = useState("2025");
   const { toast } = useToast();
   const [exportLoading, setExportLoading] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const handleGerarRelatorio = (relatorioId: number) => {
     toast({
@@ -158,15 +164,44 @@ const Relatorios = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="2025">2025</SelectItem>
               <SelectItem value="2024">2024</SelectItem>
               <SelectItem value="2023">2023</SelectItem>
               <SelectItem value="2022">2022</SelectItem>
             </SelectContent>
           </Select>
-          <Button className="flex items-center space-x-2">
-            <Calendar className="h-4 w-4" />
-            <span>Período Personalizado</span>
-          </Button>
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                className="flex items-center space-x-2"
+                variant="outline"
+                type="button"
+              >
+                <CalendarIcon className="h-4 w-4" />
+                <span>Período Personalizado</span>
+                {dateRange.from && dateRange.to && (
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    {format(dateRange.from, "dd/MM/yyyy")} - {format(dateRange.to, "dd/MM/yyyy")}
+                  </span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 z-50" align="end">
+              <Calendar
+                mode="range"
+                selected={dateRange}
+                onSelect={(range) => {
+                  setDateRange(range as { from: Date; to: Date });
+                  if ((range as { from: Date; to: Date }).from && (range as { from: Date; to: Date }).to) {
+                    setCalendarOpen(false);
+                  }
+                }}
+                numberOfMonths={2}
+                locale={ptBR}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
@@ -387,4 +422,3 @@ const Relatorios = () => {
 };
 
 export default Relatorios;
-
