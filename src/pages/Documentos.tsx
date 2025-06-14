@@ -121,7 +121,7 @@ const Documentos = () => {
     toast({
       title: "Visualizar documento",
       description: `Função de visualização para documento ID: ${documentoId} não está implementada.`,
-      variant: "outline",
+      variant: "default",
     });
   };
 
@@ -129,7 +129,7 @@ const Documentos = () => {
     toast({
       title: "Download iniciado",
       description: `Função de download para documento ID: ${documentoId} não está implementada.`,
-      variant: "outline",
+      variant: "default",
     });
   };
 
