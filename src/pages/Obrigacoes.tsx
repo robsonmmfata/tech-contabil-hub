@@ -6,10 +6,17 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { NovaObrigacaoModal } from "@/components/modals/NovaObrigacaoModal";
+import { VisualizarObrigacaoModal } from "@/components/modals/VisualizarObrigacaoModal";
+import { ConfirmarConcluirObrigacaoModal } from "@/components/modals/ConfirmarConcluirObrigacaoModal";
 import { useToast } from "@/hooks/use-toast";
 
 const Obrigacoes = () => {
   const [selectedTab, setSelectedTab] = useState("pendentes");
+  const [modalVisualizarOpen, setModalVisualizarOpen] = useState(false);
+  const [obrigacaoSelecionada, setObrigacaoSelecionada] = useState<any | null>(null);
+  const [modalConcluirOpen, setModalConcluirOpen] = useState(false);
+  const [obrPend, setObrPend] = useState(obrigacoesPendentes);
+  const [obrConc, setObrConc] = useState(obrigacoesConcluidas);
   const { toast } = useToast();
 
   const obrigacoesPendentes = [
@@ -44,17 +51,30 @@ const Obrigacoes = () => {
   ];
 
   const handleConcluir = (obrigacaoId: number) => {
+    const obrigacao = obrPend.find((o) => o.id === obrigacaoId);
+    setObrigacaoSelecionada(obrigacao || null);
+    setModalConcluirOpen(true);
+  };
+
+  const handleConfirmarConcluir = () => {
+    if (!obrigacaoSelecionada) return;
+    setObrPend((prev) => prev.filter((o) => o.id !== obrigacaoSelecionada.id));
+    setObrConc((prev) => [
+      ...prev,
+      { ...obrigacaoSelecionada, status: "concluido" }
+    ]);
     toast({
       title: "Obrigação concluída",
-      description: `Obrigação ID ${obrigacaoId} foi marcada como concluída!`,
+      description: `Obrigação "${obrigacaoSelecionada.tipo}" foi marcada como concluída!`,
     });
+    setModalConcluirOpen(false);
+    setObrigacaoSelecionada(null);
   };
 
   const handleVisualizarDocumento = (obrigacaoId: number) => {
-    toast({
-      title: "Visualizar documento",
-      description: `Abrindo documento da obrigação ID: ${obrigacaoId}`,
-    });
+    const obrigacao = obrPend.find((o) => o.id === obrigacaoId) || obrConc.find((o) => o.id === obrigacaoId);
+    setObrigacaoSelecionada(obrigacao || null);
+    setModalVisualizarOpen(true);
   };
 
   return (
@@ -168,7 +188,7 @@ const Obrigacoes = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {obrigacoesPendentes.map((obrigacao) => (
+                  {obrPend.map((obrigacao) => (
                     <TableRow key={obrigacao.id}>
                       <TableCell className="font-medium">{obrigacao.cliente}</TableCell>
                       <TableCell>{obrigacao.tipo}</TableCell>
@@ -218,6 +238,17 @@ const Obrigacoes = () => {
           </Tabs>
         </CardContent>
       </Card>
+
+      <VisualizarObrigacaoModal
+        open={modalVisualizarOpen}
+        onOpenChange={setModalVisualizarOpen}
+        obrigacao={obrigacaoSelecionada}
+      />
+      <ConfirmarConcluirObrigacaoModal
+        open={modalConcluirOpen}
+        onOpenChange={setModalConcluirOpen}
+        onConfirm={handleConfirmarConcluir}
+      />
     </div>
   );
 };
