@@ -11,14 +11,6 @@ import { ConfirmarConcluirObrigacaoModal } from "@/components/modals/ConfirmarCo
 import { useToast } from "@/hooks/use-toast";
 
 const Obrigacoes = () => {
-  const [selectedTab, setSelectedTab] = useState("pendentes");
-  const [modalVisualizarOpen, setModalVisualizarOpen] = useState(false);
-  const [obrigacaoSelecionada, setObrigacaoSelecionada] = useState<any | null>(null);
-  const [modalConcluirOpen, setModalConcluirOpen] = useState(false);
-  const [obrPend, setObrPend] = useState(obrigacoesPendentes);
-  const [obrConc, setObrConc] = useState(obrigacoesConcluidas);
-  const { toast } = useToast();
-
   const obrigacoesPendentes = [
     { id: 1, cliente: "Tech Solutions Ltda", tipo: "DAS", vencimento: "2024-01-15", status: "pendente", valor: "R$ 1.250,00" },
     { id: 2, cliente: "DevCorp", tipo: "IRPJ", vencimento: "2024-01-20", status: "atrasado", valor: "R$ 3.500,00" },
@@ -30,6 +22,14 @@ const Obrigacoes = () => {
     { id: 5, cliente: "WebDesign Pro", tipo: "DAS", vencimento: "2024-01-05", status: "concluido", valor: "R$ 980,00" },
     { id: 6, cliente: "AppDev Inc", tipo: "ISS", vencimento: "2024-01-10", status: "concluido", valor: "R$ 1.500,00" }
   ];
+
+  const [selectedTab, setSelectedTab] = useState("pendentes");
+  const [modalVisualizarOpen, setModalVisualizarOpen] = useState(false);
+  const [obrigacaoSelecionada, setObrigacaoSelecionada] = useState<any | null>(null);
+  const [modalConcluirOpen, setModalConcluirOpen] = useState(false);
+  const [obrPend, setObrPend] = useState(obrigacoesPendentes);
+  const [obrConc, setObrConc] = useState(obrigacoesConcluidas);
+  const { toast } = useToast();
 
   const getStatusBadge = (status: string) => {
     switch (status) {
