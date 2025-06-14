@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { BarChart3, PieChart, FileText, Download, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ReceitasMensaisChart } from "@/components/charts/ReceitasMensaisChart";
-import { ServicosPieChart } from "@/components/charts/ServicosPieChart";
 import { useToast } from "@/hooks/use-toast";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -16,41 +14,11 @@ import { Calendar } from "@/components/ui/calendar";
 import { format, isValid } from "date-fns";
 import { ptBR } from "date-fns/locale/pt-BR";
 import type { DateRange } from "react-day-picker";
-
-const receitasMensaisData = [
-  { mes: 'Jan', valor: 28400 },
-  { mes: 'Fev', valor: 31200 },
-  { mes: 'Mar', valor: 29800 },
-  { mes: 'Abr', valor: 33600 },
-  { mes: 'Mai', valor: 35200 },
-  { mes: 'Jun', valor: 32800 },
-];
-
-const servicosPieData = [
-  { name: 'DAS', value: 35, color: '#3b82f6' },
-  { name: 'IRPJ', value: 25, color: '#10b981' },
-  { name: 'Folha', value: 20, color: '#f59e0b' },
-  { name: 'Obrigações', value: 15, color: '#ef4444' },
-  { name: 'Outros', value: 5, color: '#8b5cf6' },
-];
-
-const relatoriosDisponiveis = {
-  financeiros: [
-    { id: 1, nome: "Receitas vs Despesas", descricao: "Comparativo mensal", periodo: "Janeiro 2024" },
-    { id: 2, nome: "Fluxo de Caixa", descricao: "Movimentação financeira", periodo: "Janeiro 2024" },
-    { id: 3, nome: "Faturamento por Cliente", descricao: "Ranking de clientes", periodo: "Janeiro 2024" }
-  ],
-  obrigacoes: [
-    { id: 4, nome: "Obrigações Cumpridas", descricao: "Status das obrigações", periodo: "Janeiro 2024" },
-    { id: 5, nome: "Prazos em Atraso", descricao: "Obrigações pendentes", periodo: "Janeiro 2024" },
-    { id: 6, nome: "Calendário Fiscal", descricao: "Próximos vencimentos", periodo: "Fevereiro 2024" }
-  ],
-  clientes: [
-    { id: 7, nome: "Relatório de Clientes", descricao: "Lista completa de clientes", periodo: "Atual" },
-    { id: 8, nome: "Clientes por Regime", descricao: "Distribuição por regime tributário", periodo: "Atual" },
-    { id: 9, nome: "Histórico de Serviços", descricao: "Serviços prestados por cliente", periodo: "Janeiro 2024" }
-  ]
-};
+import { useClientes } from "@/hooks/useClientes";
+import { useServicos } from "@/hooks/useServicos";
+import { useObrigacoes } from "@/hooks/useObrigacoes";
+import { ReceitasMensaisChart } from "@/components/charts/ReceitasMensaisChart";
+import { ServicosPieChart } from "@/components/charts/ServicosPieChart";
 
 const Relatorios = () => {
   const [periodo, setPeriodo] = useState("2025");
@@ -58,6 +26,76 @@ const Relatorios = () => {
   const [exportLoading, setExportLoading] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
   const [calendarOpen, setCalendarOpen] = useState(false);
+
+  // Dados reais via hooks
+  const { clientes } = useClientes();
+  const { servicos, loading: servicosLoading } = useServicos();
+  const { obrigacoes, loading: obrigacoesLoading } = useObrigacoes();
+
+  // Card Analítico: Receita e Serviços, Percentuais
+  const totalReceita = useMemo(
+    () => servicos.reduce((acc, s) => acc + (typeof s.value === "number" ? s.value : 0), 0),
+    [servicos]
+  );
+  const servicosPrestados = servicos.length;
+
+  // Obrigações Cumpridas (%)
+  const obrTotal = obrigacoes.length;
+  const obrCumpridas = obrigacoes.filter(o => o.status === "concluida" || o.status === "cumprida").length;
+  const obrPercent = obrTotal > 0 ? Math.round((obrCumpridas / obrTotal) * 100) : 0;
+
+  // Clientes ativos
+  const clientesAtivos = clientes.filter(c => c.status === "ativo").length;
+
+  // Gera dados agrupados por mês para gráfico de receitas mensais
+  const receitasMensaisData = useMemo(() => {
+    const map: { [mes: string]: number } = {};
+    for (const s of servicos) {
+      if (s.due_date) {
+        const date = new Date(s.due_date);
+        const mes = date.toLocaleString("pt-BR", { month: "short" });
+        map[mes] = (map[mes] || 0) + (typeof s.value === "number" ? s.value : 0);
+      }
+    }
+    return Object.entries(map).map(([mes, valor]) => ({
+      mes,
+      valor
+    }));
+  }, [servicos]);
+
+  // Gráfico de serviços mais solicitados (por tipo)
+  const servicosPieData = useMemo(() => {
+    const map: { [tipo: string]: number } = {};
+    for (const s of servicos) {
+      map[s.type] = (map[s.type] || 0) + 1;
+    }
+    // Adiciona cor diferente para cada tipo
+    const cores = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#6366f1", "#14b8a6", "#eab308"];
+    return Object.entries(map).map(([name, value], i) => ({
+      name,
+      value,
+      color: cores[i % cores.length]
+    }));
+  }, [servicos]);
+
+  // Relatórios disponíveis montados dinamicamente conforme dados reais:
+  const relatoriosDisponiveis = useMemo(() => ({
+    financeiros: [
+      { id: 1, nome: "Receitas vs Despesas", descricao: "Comparativo mensal", periodo: periodo },
+      { id: 2, nome: "Fluxo de Caixa", descricao: "Movimentação financeira", periodo: periodo },
+      { id: 3, nome: "Faturamento por Cliente", descricao: "Ranking de clientes", periodo: periodo }
+    ],
+    obrigacoes: [
+      { id: 4, nome: "Obrigações Cumpridas", descricao: "Status das obrigações", periodo: periodo },
+      { id: 5, nome: "Prazos em Atraso", descricao: "Obrigações pendentes", periodo: periodo },
+      { id: 6, nome: "Calendário Fiscal", descricao: "Próximos vencimentos", periodo: periodo }
+    ],
+    clientes: [
+      { id: 7, nome: "Relatório de Clientes", descricao: "Lista completa de clientes", periodo: "Atual" },
+      { id: 8, nome: "Clientes por Regime", descricao: "Distribuição por regime tributário", periodo: "Atual" },
+      { id: 9, nome: "Histórico de Serviços", descricao: "Serviços prestados por cliente", periodo: periodo }
+    ]
+  }), [periodo]);
 
   const handleGerarRelatorio = (relatorioId: number) => {
     toast({
@@ -106,6 +144,7 @@ const Relatorios = () => {
     }
   };
 
+  // Handlers exportação ajustados para os reais dados
   const handleExportarGrafico = async (tipo: "receitas" | "servicos", formato: "pdf" | "xls") => {
     setExportLoading(`${tipo}-${formato}`);
     if (tipo === "receitas") {
@@ -213,7 +252,7 @@ const Relatorios = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Receita Total</p>
-                <p className="text-2xl font-bold text-green-600">R$ 186.400</p>
+                <p className="text-2xl font-bold text-green-600">R$ {totalReceita.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
                 <p className="text-sm text-green-600 mt-1">+12% vs período anterior</p>
               </div>
               <TrendingUp className="h-8 w-8 text-green-600" />
@@ -226,7 +265,7 @@ const Relatorios = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Serviços Prestados</p>
-                <p className="text-2xl font-bold text-blue-600">147</p>
+                <p className="text-2xl font-bold text-blue-600">{servicosPrestados}</p>
                 <p className="text-sm text-blue-600 mt-1">+8% vs período anterior</p>
               </div>
               <BarChart3 className="h-8 w-8 text-blue-600" />
@@ -239,7 +278,7 @@ const Relatorios = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Obrigações Cumpridas</p>
-                <p className="text-2xl font-bold text-purple-600">98%</p>
+                <p className="text-2xl font-bold text-purple-600">{obrPercent}%</p>
                 <p className="text-sm text-purple-600 mt-1">Excelente desempenho</p>
               </div>
               <PieChart className="h-8 w-8 text-purple-600" />
@@ -252,7 +291,7 @@ const Relatorios = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Clientes Ativos</p>
-                <p className="text-2xl font-bold text-orange-600">47</p>
+                <p className="text-2xl font-bold text-orange-600">{clientesAtivos}</p>
                 <p className="text-sm text-orange-600 mt-1">+3 novos clientes</p>
               </div>
               <FileText className="h-8 w-8 text-orange-600" />

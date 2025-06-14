@@ -178,7 +178,7 @@ const Financeiro = () => {
             <Download className="h-4 w-4" />
             <span>Exportar</span>
           </Button>
-          <NovaTransacaoModal recarregar={recarregar} />
+          <NovaTransacaoModal />
         </div>
       </div>
 

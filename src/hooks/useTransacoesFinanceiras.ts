@@ -37,7 +37,13 @@ export function useTransacoesFinanceiras(): UseTransacoesFinanceirasReturn {
     if (error) {
       setErro(error.message);
     } else {
-      setTransacoes(data ?? []);
+      // Corrige o erro de tipagem: força para "receita" | "despesa"
+      setTransacoes(
+        (data ?? []).map((item: any) => ({
+          ...item,
+          tipo: item.tipo === "receita" ? "receita" : "despesa",
+        }))
+      );
     }
     setIsLoading(false);
   };

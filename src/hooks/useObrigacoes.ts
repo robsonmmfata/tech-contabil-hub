@@ -6,46 +6,26 @@ export type Obrigacao = {
   id: number;
   cliente_id: number | null;
   tipo: string;
-  vencimento: string;   // Supabase retorna como ISO string ('YYYY-MM-DD')
-  status: string;
   valor: number | null;
+  vencimento: string;
+  status: string;
   created_at: string | null;
 };
 
-type UseObrigacoesHookReturn = {
-  obrigacoes: Obrigacao[];
-  isLoading: boolean;
-  erro: string | null;
-  recarregar: () => void;
-};
-
-export function useObrigacoes(): UseObrigacoesHookReturn {
+export function useObrigacoes() {
   const [obrigacoes, setObrigacoes] = useState<Obrigacao[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
-  const buscarObrigacoes = async () => {
-    setIsLoading(true);
+  const buscar = async () => {
+    setLoading(true);
     setErro(null);
-    const { data, error } = await supabase
-      .from("obrigacoes")
-      .select("*")
-      .order("vencimento", { ascending: true });
-    if (error) {
-      setErro(error.message);
-    } else {
-      setObrigacoes(data || []);
-    }
-    setIsLoading(false);
+    const { data, error } = await supabase.from("obrigacoes").select("*").order("vencimento", { ascending: false });
+    if (error) setErro(error.message);
+    else setObrigacoes(data ?? []);
+    setLoading(false);
   };
 
-  useEffect(() => {
-    buscarObrigacoes();
-  }, []);
-
-  const recarregar = () => {
-    buscarObrigacoes();
-  };
-
-  return { obrigacoes, isLoading, erro, recarregar };
+  useEffect(() => { buscar(); }, []);
+  return { obrigacoes, loading, erro, recarregar: buscar };
 }

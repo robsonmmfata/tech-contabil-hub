@@ -7,47 +7,27 @@ export type Servico = {
   cliente_id: number | null;
   type: string;
   description: string | null;
-  competence: string | null;
-  due_date: string | null;
   value: number | null;
+  due_date: string | null;
+  competence: string | null;
   status: string;
   created_at: string | null;
 };
 
-type UseServicosHookReturn = {
-  servicos: Servico[];
-  isLoading: boolean;
-  erro: string | null;
-  recarregar: () => void;
-};
-
-export function useServicos(): UseServicosHookReturn {
+export function useServicos() {
   const [servicos, setServicos] = useState<Servico[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
-  const buscarServicos = async () => {
-    setIsLoading(true);
+  const buscar = async () => {
+    setLoading(true);
     setErro(null);
-    const { data, error } = await supabase
-      .from("servicos")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) {
-      setErro(error.message);
-    } else {
-      setServicos(data || []);
-    }
-    setIsLoading(false);
+    const { data, error } = await supabase.from("servicos").select("*").order("created_at", { ascending: false });
+    if (error) setErro(error.message);
+    else setServicos(data ?? []);
+    setLoading(false);
   };
 
-  useEffect(() => {
-    buscarServicos();
-  }, []);
-
-  const recarregar = () => {
-    buscarServicos();
-  };
-
-  return { servicos, isLoading, erro, recarregar };
+  useEffect(() => { buscar(); }, []);
+  return { servicos, loading, erro, recarregar: buscar };
 }
