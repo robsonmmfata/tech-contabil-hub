@@ -14,6 +14,8 @@ import { ExportarFinanceiroModal } from "@/components/modals/ExportarFinanceiroM
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import { useTransacoesFinanceiras } from "@/hooks/useTransacoesFinanceiras";
+import { useClientes } from "@/hooks/useClientes";
 
 const Financeiro = () => {
   const [selectedTab, setSelectedTab] = useState("receitas");
@@ -23,19 +25,19 @@ const Financeiro = () => {
   const [tipoTransacaoSelecionada, setTipoTransacaoSelecionada] = useState<"receita" | "despesa">("receita");
   const { toast } = useToast();
 
-  // Torna receitas um estado para atualizar na tela
-  const [receitas, setReceitas] = useState([
-    { id: 1, cliente: "Tech Solutions Ltda", servico: "DAS + Folha", valor: 1850.00, vencimento: "2024-01-15", status: "pago" },
-    { id: 2, cliente: "DevCorp", servico: "IRPJ", valor: 3500.00, vencimento: "2024-01-20", status: "pendente" },
-    { id: 3, cliente: "StartupXYZ", servico: "Consultoria", valor: 2200.00, vencimento: "2024-01-25", status: "atrasado" },
-    { id: 4, cliente: "CodeMaster", servico: "Contabilidade Mensal", valor: 1200.00, vencimento: "2024-01-30", status: "pago" }
-  ]);
+  const { transacoes, isLoading, erro, recarregar, atualizarStatus } = useTransacoesFinanceiras();
+  const { clientes } = useClientes();
 
-  const despesas = [
-    { id: 1, descricao: "Software Contábil", categoria: "Tecnologia", valor: 450.00, data: "2024-01-05", status: "pago" },
-    { id: 2, descricao: "Certificado Digital", categoria: "Certificações", valor: 180.00, data: "2024-01-10", status: "pago" },
-    { id: 3, descricao: "Marketing Digital", categoria: "Marketing", valor: 800.00, data: "2024-01-15", status: "pendente" }
-  ];
+  if (erro) {
+    return (
+      <div className="p-6 text-red-600">
+        Erro ao carregar dados financeiros: {erro}
+      </div>
+    );
+  }
+
+  const receitas = transacoes.filter(t => t.tipo === "receita");
+  const despesas = transacoes.filter(t => t.tipo === "despesa");
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -50,22 +52,16 @@ const Financeiro = () => {
     }
   };
 
-  // Os cálculos precisam usar receitas do estado
-  const totalReceitas = receitas.reduce((sum, receita) => sum + receita.valor, 0);
-  const totalDespesas = despesas.reduce((sum, despesa) => sum + despesa.valor, 0);
+  const totalReceitas = receitas.reduce((sum, r) => sum + r.valor, 0);
+  const totalDespesas = despesas.reduce((sum, d) => sum + d.valor, 0);
   const lucroLiquido = totalReceitas - totalDespesas;
-  const receitasPagas = receitas.filter(r => r.status === 'pago').reduce((sum, receita) => sum + receita.valor, 0);
+  const receitasPagas = receitas.filter(r => r.status === "pago").reduce((sum, r) => sum + r.valor, 0);
 
-  // Atualizar status da receita direto no estado
-  const handleReceber = (receitaId: number) => {
-    setReceitas((prevReceitas) =>
-      prevReceitas.map((r) =>
-        r.id === receitaId ? { ...r, status: 'pago' } : r
-      )
-    );
+  const handleReceber = async (receitaId: number) => {
+    await atualizarStatus(receitaId, "pago");
     toast({
       title: "Receita recebida",
-      description: `Receita ID ${receitaId} foi marcada como paga!`,
+      description: `Receita ID ${receitaId} foi marcada como paga!`
     });
   };
 
@@ -77,37 +73,32 @@ const Financeiro = () => {
     if (type === "pdf") {
       const doc = new jsPDF();
 
-      // É importante garantir que o método autoTable está no protótipo da instância
-      // Isso foi resolvido ao importar "autoTable" diretamente acima.
-
       doc.text("Receitas", 10, 10);
 
-      // Use o método autoTable attachado diretamente (forma mais portável)
       autoTable(doc, {
         head: [["Cliente", "Serviço", "Valor", "Vencimento", "Status"]],
         body: receitas.map(r => [
-          r.cliente,
-          r.servico,
-          `R$ ${r.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }`,
-          r.vencimento,
+          clientes.find(c => c.id === r.cliente_id)?.nome || "-",
+          r.descricao || "-",
+          `R$ ${r.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+          r.data,
           r.status.charAt(0).toUpperCase() + r.status.slice(1)
         ]),
         startY: 15
       });
 
-      // Recuperar a posição Y final da primeira tabela
       const finalY =
         (doc as any).lastAutoTable && (doc as any).lastAutoTable.finalY
           ? (doc as any).lastAutoTable.finalY
-          : 35; // fallback
+          : 35;
 
       doc.text("Despesas", 10, finalY + 10);
 
       autoTable(doc, {
         head: [["Descrição", "Categoria", "Valor", "Data", "Status"]],
         body: despesas.map(d => [
-          d.descricao,
-          d.categoria,
+          d.descricao || "-",
+          d.categoria || "-",
           `R$ ${d.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
           d.data,
           d.status.charAt(0).toUpperCase() + d.status.slice(1)
@@ -120,10 +111,18 @@ const Financeiro = () => {
     }
     if (type === "xls") {
       const receitasSheet = receitas.map(r => ({
-        Cliente: r.cliente, Serviço: r.servico, Valor: r.valor, Vencimento: r.vencimento, Status: r.status
+        Cliente: clientes.find(c => c.id === r.cliente_id)?.nome || "-",
+        Serviço: r.descricao || "-",
+        Valor: r.valor,
+        Vencimento: r.data,
+        Status: r.status
       }));
       const despesasSheet = despesas.map(d => ({
-        Descrição: d.descricao, Categoria: d.categoria, Valor: d.valor, Data: d.data, Status: d.status
+        Descrição: d.descricao || "-",
+        Categoria: d.categoria || "-",
+        Valor: d.valor,
+        Data: d.data,
+        Status: d.status
       }));
       const wb = XLSX.utils.book_new();
       const wsReceitas = XLSX.utils.json_to_sheet(receitasSheet);
@@ -149,9 +148,14 @@ const Financeiro = () => {
     setModalVisualizarOpen(true);
   };
 
+  const getClienteNome = (cliente_id: number | null) => {
+    if (!cliente_id) return "";
+    const cli = clientes.find((c) => c.id === cliente_id);
+    return cli ? cli.nome : "";
+  };
+
   return (
     <div className="space-y-6">
-      {/* Modal Visualizar Documento */}
       <VisualizarTransacaoModal
         open={modalVisualizarOpen}
         onOpenChange={setModalVisualizarOpen}
@@ -174,11 +178,10 @@ const Financeiro = () => {
             <Download className="h-4 w-4" />
             <span>Exportar</span>
           </Button>
-          <NovaTransacaoModal />
+          <NovaTransacaoModal recarregar={recarregar} />
         </div>
       </div>
 
-      {/* Cards de Resumo Financeiro */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardContent className="p-6">
@@ -199,7 +202,7 @@ const Financeiro = () => {
               <div>
                 <p className="text-sm font-medium text-gray-500">Receitas Recebidas</p>
                 <p className="text-2xl font-bold text-blue-600">R$ {receitasPagas.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
-                <p className="text-sm text-blue-600 mt-1">67% do total</p>
+                <p className="text-sm text-blue-600 mt-1">{totalReceitas ? `${Math.round((receitasPagas/totalReceitas)*100)}%` : 0}% do total</p>
               </div>
               <DollarSign className="h-8 w-8 text-blue-600" />
             </div>
@@ -227,7 +230,7 @@ const Financeiro = () => {
                 <p className={`text-2xl font-bold ${lucroLiquido >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   R$ {lucroLiquido.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
                 </p>
-                <p className="text-sm text-green-600 mt-1">Margem: {((lucroLiquido/totalReceitas)*100).toFixed(1)}%</p>
+                <p className="text-sm text-green-600 mt-1">Margem: {totalReceitas ? ((lucroLiquido/totalReceitas)*100).toFixed(1) : 0}%</p>
               </div>
               <CreditCard className="h-8 w-8 text-green-600" />
             </div>
@@ -235,7 +238,6 @@ const Financeiro = () => {
         </Card>
       </div>
 
-      {/* Gráfico de Fluxo de Caixa */}
       <Card>
         <CardHeader>
           <CardTitle>Fluxo de Caixa - Janeiro 2024</CardTitle>
@@ -245,12 +247,14 @@ const Financeiro = () => {
         </CardContent>
       </Card>
 
-      {/* Tabelas de Receitas e Despesas */}
       <Card>
         <CardHeader>
           <CardTitle>Movimentação Financeira</CardTitle>
         </CardHeader>
         <CardContent>
+          {isLoading ? (
+            <div className="text-gray-500 text-center py-8">Carregando...</div>
+          ) : (
           <Tabs value={selectedTab} onValueChange={setSelectedTab}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="receitas">Receitas</TabsTrigger>
@@ -262,9 +266,9 @@ const Financeiro = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Cliente</TableHead>
-                    <TableHead>Serviço</TableHead>
+                    <TableHead>Descrição</TableHead>
                     <TableHead>Valor</TableHead>
-                    <TableHead>Vencimento</TableHead>
+                    <TableHead>Data</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Ações</TableHead>
                   </TableRow>
@@ -272,10 +276,10 @@ const Financeiro = () => {
                 <TableBody>
                   {receitas.map((receita) => (
                     <TableRow key={receita.id}>
-                      <TableCell className="font-medium">{receita.cliente}</TableCell>
-                      <TableCell>{receita.servico}</TableCell>
+                      <TableCell className="font-medium">{getClienteNome(receita.cliente_id) || "-"}</TableCell>
+                      <TableCell>{receita.descricao || "-"}</TableCell>
                       <TableCell>R$ {receita.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</TableCell>
-                      <TableCell>{receita.vencimento}</TableCell>
+                      <TableCell>{receita.data}</TableCell>
                       <TableCell>{getStatusBadge(receita.status)}</TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
@@ -310,8 +314,8 @@ const Financeiro = () => {
                 <TableBody>
                   {despesas.map((despesa) => (
                     <TableRow key={despesa.id}>
-                      <TableCell className="font-medium">{despesa.descricao}</TableCell>
-                      <TableCell>{despesa.categoria}</TableCell>
+                      <TableCell className="font-medium">{despesa.descricao || "-"}</TableCell>
+                      <TableCell>{despesa.categoria || "-"}</TableCell>
                       <TableCell>R$ {despesa.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</TableCell>
                       <TableCell>{despesa.data}</TableCell>
                       <TableCell>{getStatusBadge(despesa.status)}</TableCell>
@@ -326,6 +330,7 @@ const Financeiro = () => {
               </Table>
             </TabsContent>
           </Tabs>
+          )}
         </CardContent>
       </Card>
     </div>
