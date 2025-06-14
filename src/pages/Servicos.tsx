@@ -10,6 +10,8 @@ import { NovoServicoModal } from "@/components/modals/NovoServicoModal";
 import { VisualizarServicoModal } from "@/components/modals/VisualizarServicoModal";
 import { UploadDocumentoServicoModal } from "@/components/modals/UploadDocumentoServicoModal";
 import { useToast } from "@/hooks/use-toast";
+import { useServicos } from "@/hooks/useServicos";
+import { useClientes } from "@/hooks/useClientes";
 
 const Servicos = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,60 +21,21 @@ const Servicos = () => {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const { toast } = useToast();
 
-  const services = [
-    {
-      id: 1,
-      client: "Tech Solutions LTDA",
-      type: "DAS",
-      description: "DAS - Simples Nacional Junho/2025",
-      competence: "06/2025",
-      dueDate: "20/06/2025",
-      status: "pendente",
-      value: 1250.00,
-      createdAt: "10/06/2025"
-    },
-    {
-      id: 2,
-      client: "João Silva ME",
-      type: "Folha",
-      description: "Folha de Pagamento Junho/2025",
-      competence: "06/2025",
-      dueDate: "07/07/2025",
-      status: "processando",
-      value: 800.00,
-      createdAt: "09/06/2025"
-    },
-    {
-      id: 3,
-      client: "Digital Agency",
-      type: "IRPJ",
-      description: "IRPJ - 2º Trimestre 2025",
-      competence: "2T/2025",
-      dueDate: "31/07/2025",
-      status: "concluido",
-      value: 2100.00,
-      createdAt: "05/06/2025"
-    },
-    {
-      id: 4,
-      client: "StartupXYZ",
-      type: "Obrigação Acessória",
-      description: "DEFIS 2024",
-      competence: "2024",
-      dueDate: "31/05/2025",
-      status: "atrasado",
-      value: 600.00,
-      createdAt: "01/05/2025"
-    }
-  ];
+  // Buscar serviços do Supabase
+  const { servicos, isLoading: isLoadingServicos, erro: erroServicos, recarregar: recarregarServicos } = useServicos();
+  const { clientes } = useClientes();
 
-  const filteredServices = services.filter(service => {
-    const matchesSearch = service.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         service.type.toLowerCase().includes(searchTerm.toLowerCase());
-    
+  // Filtros virtuais usando estado
+  const filteredServices = servicos.filter(service => {
+    // Busca por cliente
+    const cliente = clientes.find(c => c.id === service.cliente_id);
+    const searchStr = [
+      cliente?.nome?.toLowerCase() || "",
+      service.description?.toLowerCase() || "",
+      service.type?.toLowerCase() || ""
+    ].join(" ");
+    const matchesSearch = searchStr.includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'todos' || service.status === statusFilter;
-    
     return matchesSearch && matchesStatus;
   });
 
@@ -102,13 +65,13 @@ const Servicos = () => {
   };
 
   const handleView = (serviceId: number) => {
-    const servico = services.find(s => s.id === serviceId);
+    const servico = servicos.find(s => s.id === serviceId);
     setServicoSelecionado(servico);
     setVisualizarModalOpen(true);
   };
 
   const handleUpload = (serviceId: number) => {
-    const servico = services.find(s => s.id === serviceId);
+    const servico = servicos.find(s => s.id === serviceId);
     setServicoSelecionado(servico);
     setUploadModalOpen(true);
   };
@@ -137,7 +100,7 @@ const Servicos = () => {
           <CardContent className="p-4">
             <div className="text-center">
               <p className="text-2xl font-bold text-gray-700">
-                {services.filter(s => s.status === 'pendente').length}
+                {servicos.filter(s => s.status === 'pendente').length}
               </p>
               <p className="text-sm text-gray-500">Pendentes</p>
             </div>
@@ -147,7 +110,7 @@ const Servicos = () => {
           <CardContent className="p-4">
             <div className="text-center">
               <p className="text-2xl font-bold text-yellow-600">
-                {services.filter(s => s.status === 'processando').length}
+                {servicos.filter(s => s.status === 'processando').length}
               </p>
               <p className="text-sm text-gray-500">Processando</p>
             </div>
@@ -157,7 +120,7 @@ const Servicos = () => {
           <CardContent className="p-4">
             <div className="text-center">
               <p className="text-2xl font-bold text-green-600">
-                {services.filter(s => s.status === 'concluido').length}
+                {servicos.filter(s => s.status === 'concluido').length}
               </p>
               <p className="text-sm text-gray-500">Concluídos</p>
             </div>
@@ -167,7 +130,7 @@ const Servicos = () => {
           <CardContent className="p-4">
             <div className="text-center">
               <p className="text-2xl font-bold text-red-600">
-                {services.filter(s => s.status === 'atrasado').length}
+                {servicos.filter(s => s.status === 'atrasado').length}
               </p>
               <p className="text-sm text-gray-500">Atrasados</p>
             </div>
@@ -223,60 +186,62 @@ const Servicos = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredServices.map((service) => {
-                const statusConfig = getStatusConfig(service.status);
-                const StatusIcon = statusConfig.icon;
-                
-                return (
-                  <TableRow key={service.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium text-gray-900">{service.client}</p>
-                        <p className="text-xs text-gray-500">Criado em {service.createdAt}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="flex items-center space-x-2 mb-1">
-                          <Badge className={getServiceTypeColor(service.type)}>
-                            {service.type}
-                          </Badge>
+              {isLoadingServicos ? <div>Carregando...</div> : erroServicos ? <div className="text-red-500">{erroServicos}</div> : (
+                filteredServices.map((service) => {
+                  const statusConfig = getStatusConfig(service.status);
+                  const StatusIcon = statusConfig.icon;
+                  
+                  return (
+                    <TableRow key={service.id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium text-gray-900">{clientes.find(c => c.id === service.cliente_id)?.nome || "Desconhecido"}</p>
+                          <p className="text-xs text-gray-500">Criado em {service.created_at}</p>
                         </div>
-                        <p className="text-sm text-gray-600">{service.description}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">{service.competence}</TableCell>
-                    <TableCell>
-                      <span className={`text-sm ${service.status === 'atrasado' ? 'text-red-600 font-medium' : 'text-gray-600'}`}>
-                        {service.dueDate}
-                      </span>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      R$ {service.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${statusConfig.color}`}>
-                          <StatusIcon className="h-3 w-3" />
-                          <span>{statusConfig.label}</span>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="flex items-center space-x-2 mb-1">
+                            <Badge className={getServiceTypeColor(service.type)}>
+                              {service.type}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-600">{service.description}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">{service.competence}</TableCell>
+                      <TableCell>
+                        <span className={`text-sm ${service.status === 'atrasado' ? 'text-red-600 font-medium' : 'text-gray-600'}`}>
+                          {service.due_date}
                         </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleView(service.id)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        {service.status === 'pendente' && (
-                          <Button variant="ghost" size="sm" onClick={() => handleUpload(service.id)}>
-                            <Upload className="h-4 w-4" />
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        R$ {service.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${statusConfig.color}`}>
+                            <StatusIcon className="h-3 w-3" />
+                            <span>{statusConfig.label}</span>
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button variant="ghost" size="sm" onClick={() => handleView(service.id)}>
+                            <Eye className="h-4 w-4" />
                           </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                          {service.status === 'pendente' && (
+                            <Button variant="ghost" size="sm" onClick={() => handleUpload(service.id)}>
+                              <Upload className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
             </TableBody>
           </Table>
         </CardContent>
