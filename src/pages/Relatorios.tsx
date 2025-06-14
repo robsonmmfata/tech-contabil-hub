@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { format, isValid } from "date-fns";
-import ptBR from "date-fns/locale/pt-BR";
+import { ptBR } from "date-fns/locale/pt-BR";
 
 const receitasMensaisData = [
   { mes: 'Jan', valor: 28400 },
@@ -55,7 +55,7 @@ const Relatorios = () => {
   const [periodo, setPeriodo] = useState("2025");
   const { toast } = useToast();
   const [exportLoading, setExportLoading] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({ from: undefined, to: undefined });
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   const handleGerarRelatorio = (relatorioId: number) => {
@@ -191,8 +191,8 @@ const Relatorios = () => {
                 mode="range"
                 selected={dateRange}
                 onSelect={(range) => {
-                  setDateRange(range as { from: Date; to: Date });
-                  if ((range as { from: Date; to: Date }).from && (range as { from: Date; to: Date }).to) {
+                  setDateRange(range as { from?: Date; to?: Date });
+                  if ((range as { from?: Date; to?: Date })?.from && (range as { from?: Date; to?: Date })?.to) {
                     setCalendarOpen(false);
                   }
                 }}
