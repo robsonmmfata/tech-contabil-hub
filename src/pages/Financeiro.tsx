@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ExportarFinanceiroModal } from "@/components/modals/ExportarFinanceiroModal";
 
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 
 const Financeiro = () => {
@@ -58,35 +58,38 @@ const Financeiro = () => {
     if (type === "pdf") {
       const doc = new jsPDF();
 
-      // Receitas Table
+      // É importante garantir que o método autoTable está no protótipo da instância
+      // Isso foi resolvido ao importar "autoTable" diretamente acima.
+
       doc.text("Receitas", 10, 10);
 
-      (doc as any).autoTable({
+      // Use o método autoTable attachado diretamente (forma mais portável)
+      autoTable(doc, {
         head: [["Cliente", "Serviço", "Valor", "Vencimento", "Status"]],
         body: receitas.map(r => [
           r.cliente,
           r.servico,
-          `R$ ${r.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
+          `R$ ${r.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }`,
           r.vencimento,
           r.status.charAt(0).toUpperCase() + r.status.slice(1)
         ]),
         startY: 15
       });
 
-      // Recuperar a posição Y final da primeira tabela. Sempre fazer um cast seguro!
+      // Recuperar a posição Y final da primeira tabela
       const finalY =
-        ((doc as any).lastAutoTable && (doc as any).lastAutoTable.finalY)
+        (doc as any).lastAutoTable && (doc as any).lastAutoTable.finalY
           ? (doc as any).lastAutoTable.finalY
           : 35; // fallback
 
-      // Despesas Table
       doc.text("Despesas", 10, finalY + 10);
-      (doc as any).autoTable({
+
+      autoTable(doc, {
         head: [["Descrição", "Categoria", "Valor", "Data", "Status"]],
         body: despesas.map(d => [
           d.descricao,
           d.categoria,
-          `R$ ${d.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
+          `R$ ${d.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
           d.data,
           d.status.charAt(0).toUpperCase() + d.status.slice(1)
         ]),
@@ -94,7 +97,7 @@ const Financeiro = () => {
       });
 
       doc.save("financeiro.pdf");
-      toast({title: "Exportação completa", description: "Arquivo PDF exportado com sucesso!"});
+      toast({ title: "Exportação completa", description: "Arquivo PDF exportado com sucesso!" });
     }
     if (type === "xls") {
       const receitasSheet = receitas.map(r => ({
@@ -109,7 +112,7 @@ const Financeiro = () => {
       XLSX.utils.book_append_sheet(wb, wsReceitas, "Receitas");
       XLSX.utils.book_append_sheet(wb, wsDespesas, "Despesas");
       XLSX.writeFile(wb, "financeiro.xlsx");
-      toast({title: "Exportação completa", description: "Arquivo Excel exportado com sucesso!"});
+      toast({ title: "Exportação completa", description: "Arquivo Excel exportado com sucesso!" });
     }
     setModalExportarOpen(false);
   };
