@@ -7,20 +7,20 @@ const ALERTAS_MOCK = [
     id: 1,
     title: "Vencimento próximo",
     description: "DAS para Tech Solutions Ltda vence em 3 dias.",
-    type: "alerta"
+    type: "alerta" as "alerta",
   },
   {
     id: 2,
     title: "Nova obrigação criada",
     description: "Foi criada uma nova obrigação para DevCorp.",
-    type: "info"
+    type: "info" as "info",
   },
   {
     id: 3,
     title: "Receita recebida",
     description: "Receita da CodeMaster foi marcada como paga.",
-    type: "success"
-  }
+    type: "success" as "success",
+  },
 ];
 
 export type AlertaCRM = {
