@@ -57,21 +57,42 @@ const Financeiro = () => {
     }
     if (type === "pdf") {
       const doc = new jsPDF();
-      // Receitas
+
+      // Receitas Table
       doc.text("Receitas", 10, 10);
+
       (doc as any).autoTable({
         head: [["Cliente", "Serviço", "Valor", "Vencimento", "Status"]],
-        body: receitas.map(r => [r.cliente, r.servico, `R$ ${r.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, r.vencimento, r.status]),
+        body: receitas.map(r => [
+          r.cliente,
+          r.servico,
+          `R$ ${r.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
+          r.vencimento,
+          r.status.charAt(0).toUpperCase() + r.status.slice(1)
+        ]),
         startY: 15
       });
-      // Despesas
-      let startY = (doc as any).lastAutoTable.finalY + 10;
-      doc.text("Despesas", 10, startY);
+
+      // Recuperar a posição Y final da primeira tabela. Sempre fazer um cast seguro!
+      const finalY =
+        ((doc as any).lastAutoTable && (doc as any).lastAutoTable.finalY)
+          ? (doc as any).lastAutoTable.finalY
+          : 35; // fallback
+
+      // Despesas Table
+      doc.text("Despesas", 10, finalY + 10);
       (doc as any).autoTable({
         head: [["Descrição", "Categoria", "Valor", "Data", "Status"]],
-        body: despesas.map(d => [d.descricao, d.categoria, `R$ ${d.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, d.data, d.status]),
-        startY: startY + 5
+        body: despesas.map(d => [
+          d.descricao,
+          d.categoria,
+          `R$ ${d.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
+          d.data,
+          d.status.charAt(0).toUpperCase() + d.status.slice(1)
+        ]),
+        startY: finalY + 15
       });
+
       doc.save("financeiro.pdf");
       toast({title: "Exportação completa", description: "Arquivo PDF exportado com sucesso!"});
     }
