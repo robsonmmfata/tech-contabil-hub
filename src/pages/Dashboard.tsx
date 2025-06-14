@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Users, FileText, Calendar, DollarSign, AlertTriangle, CheckCircle } from 'lucide-react';
 import { StatsCard } from "@/components/StatsCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { useClientes } from "@/hooks/useClientes";
 import { useServicos } from "@/hooks/useServicos";
 import { useObrigacoes } from "@/hooks/useObrigacoes";
+import { useTransacoesFinanceiras } from "@/hooks/useTransacoesFinanceiras";
 
 const Dashboard = () => {
   const { toast } = useToast();
@@ -21,6 +22,9 @@ const Dashboard = () => {
   const { clientes, isLoading: loadingClientes } = useClientes();
   const { servicos, loading: loadingServicos } = useServicos();
   const { obrigacoes, loading: loadingObrigacoes } = useObrigacoes();
+
+  // Novo: Hook para transações financeiras
+  const { transacoes, isLoading: loadingTransacoes } = useTransacoesFinanceiras();
 
   // Cards Stats
   const totalClientes = clientes.length;
@@ -100,6 +104,19 @@ const Dashboard = () => {
     });
   };
 
+  // NOVO: Calcular receita mensal real com base nas transações do mês atual
+  const receitaMensalAtual = useMemo(() => {
+    const now = new Date();
+    return transacoes
+      .filter(
+        t =>
+          t.tipo === "receita" &&
+          new Date(t.data).getMonth() === now.getMonth() &&
+          new Date(t.data).getFullYear() === now.getFullYear()
+      )
+      .reduce((acc, t) => acc + Number(t.valor), 0);
+  }, [transacoes]);
+
   // Cards de stats ajustados
   return (
     <div className="space-y-6">
@@ -132,7 +149,7 @@ const Dashboard = () => {
         />
         <StatsCard
           title="Receita Mensal"
-          value="R$ 28.400"
+          value={loadingTransacoes ? "..." : `R$ ${receitaMensalAtual.toLocaleString('pt-BR')}`}
           icon={DollarSign}
           trend="+12% vs mês anterior"
           trendUp={true}
