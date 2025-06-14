@@ -226,7 +226,7 @@ const Documentos = () => {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Documentos Recentes</span>
-            <Badge variant="outline">{documentosFiltrados.length} documentos</Badge>
+            <Badge variant="default">{documentosFiltrados.length} documentos</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
