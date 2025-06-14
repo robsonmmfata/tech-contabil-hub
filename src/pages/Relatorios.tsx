@@ -327,7 +327,8 @@ const Relatorios = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <ReceitasMensaisChart />
+            {/* Passar os dados reais via props */}
+            <ReceitasMensaisChart data={receitasMensaisData} />
           </CardContent>
         </Card>
 
@@ -356,7 +357,8 @@ const Relatorios = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <ServicosPieChart />
+            {/* Passar os dados reais via props */}
+            <ServicosPieChart data={servicosPieData} />
           </CardContent>
         </Card>
       </div>

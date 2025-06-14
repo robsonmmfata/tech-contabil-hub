@@ -2,15 +2,16 @@
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
-const data = [
-  { name: 'DAS', value: 35, color: '#3b82f6' },
-  { name: 'IRPJ', value: 25, color: '#10b981' },
-  { name: 'Folha', value: 20, color: '#f59e0b' },
-  { name: 'Obrigações', value: 15, color: '#ef4444' },
-  { name: 'Outros', value: 5, color: '#8b5cf6' },
-];
+type ServicosPieChartItem = {
+  name: string;
+  value: number;
+  color: string;
+};
+type ServicosPieChartProps = {
+  data: ServicosPieChartItem[];
+};
 
-export const ServicosPieChart = () => {
+export const ServicosPieChart = ({ data }: ServicosPieChartProps) => {
   return (
     <ResponsiveContainer width="100%" height={250}>
       <PieChart>

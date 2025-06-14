@@ -2,16 +2,11 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const data = [
-  { mes: 'Jan', valor: 28400 },
-  { mes: 'Fev', valor: 31200 },
-  { mes: 'Mar', valor: 29800 },
-  { mes: 'Abr', valor: 33600 },
-  { mes: 'Mai', valor: 35200 },
-  { mes: 'Jun', valor: 32800 },
-];
+type ReceitasMensaisChartProps = {
+  data: { mes: string; valor: number }[];
+};
 
-export const ReceitasMensaisChart = () => {
+export const ReceitasMensaisChart = ({ data }: ReceitasMensaisChartProps) => {
   return (
     <ResponsiveContainer width="100%" height={250}>
       <BarChart data={data}>
