@@ -17,84 +17,29 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import { useDocumentos } from "@/hooks/useDocumentos";
 
-// Referência para input da área de upload
 const Documentos = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("todas");
   const { toast } = useToast();
   const uploadInputRef = useRef<HTMLInputElement>(null);
 
-  const [documentos, setDocumentos] = useState([
-    {
-      id: 1,
-      nome: "DAS_TechSolutions_Jan2024.pdf",
-      tipo: "PDF",
-      categoria: "Impostos",
-      cliente: "Tech Solutions Ltda",
-      tamanho: "245 KB",
-      dataUpload: "15/01/2024",
-      status: "processado",
-      conteudo: "",
-    },
-    {
-      id: 2,
-      nome: "NotaFiscal_DevCorp_123.xml",
-      tipo: "XML",
-      categoria: "Notas Fiscais",
-      cliente: "DevCorp",
-      tamanho: "12 KB",
-      dataUpload: "14/01/2024",
-      status: "pendente",
-      conteudo: "",
-    },
-    {
-      id: 3,
-      nome: "Contrato_StartupXYZ.pdf",
-      tipo: "PDF",
-      categoria: "Contratos",
-      cliente: "StartupXYZ",
-      tamanho: "1.2 MB",
-      dataUpload: "13/01/2024",
-      status: "processado",
-      conteudo: "",
-    },
-    {
-      id: 4,
-      nome: "FolhaPagamento_CodeMaster_Jan.xlsx",
-      tipo: "Excel",
-      categoria: "Folha",
-      cliente: "CodeMaster",
-      tamanho: "89 KB",
-      dataUpload: "12/01/2024",
-      status: "processado",
-      conteudo: "",
-    },
-    {
-      id: 5,
-      nome: "Recibo_WebDesign_Servicos.pdf",
-      tipo: "PDF",
-      categoria: "Recibos",
-      cliente: "WebDesign Pro",
-      tamanho: "156 KB",
-      dataUpload: "11/01/2024",
-      status: "processado",
-      conteudo: "",
-    }
-  ]);
+  // Hook para pegar documentos do Supabase
+  const { documentos, isLoading, erro, recarregar } = useDocumentos();
 
   const [modalVisualizar, setModalVisualizar] = useState<null | typeof documentos[0]>(null);
   const [modalExcluir, setModalExcluir] = useState<number | null>(null);
 
   const categorias = [
-    { nome: "Impostos", count: 15, cor: "blue" },
-    { nome: "Notas Fiscais", count: 28, cor: "green" },
-    { nome: "Contratos", count: 8, cor: "purple" },
-    { nome: "Folha", count: 12, cor: "orange" },
-    { nome: "Recibos", count: 22, cor: "pink" }
+    { nome: "Impostos", count: documentos.filter(d => d.categoria === "Impostos").length, cor: "blue" },
+    { nome: "Notas Fiscais", count: documentos.filter(d => d.categoria === "Notas Fiscais").length, cor: "green" },
+    { nome: "Contratos", count: documentos.filter(d => d.categoria === "Contratos").length, cor: "purple" },
+    { nome: "Folha", count: documentos.filter(d => d.categoria === "Folha").length, cor: "orange" },
+    { nome: "Recibos", count: documentos.filter(d => d.categoria === "Recibos").length, cor: "pink" }
   ];
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string | null) => {
     switch (status) {
       case 'processado':
         return <Badge variant="default" className="bg-green-50 text-green-700 border-green-200">Processado</Badge>;
@@ -107,8 +52,8 @@ const Documentos = () => {
     }
   };
 
-  const getTipoIcon = (tipo: string) => {
-    switch (tipo.toLowerCase()) {
+  const getTipoIcon = (tipo: string | null) => {
+    switch ((tipo || '').toLowerCase()) {
       case 'pdf':
         return <FileText className="h-5 w-5 text-red-500" />;
       case 'xml':
@@ -121,29 +66,16 @@ const Documentos = () => {
   };
 
   const documentosFiltrados = documentos.filter(doc => {
-    const matchSearch = doc.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.cliente.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchSearch = doc.nome.toLowerCase().includes(searchTerm.toLowerCase());
     const matchCategory = selectedCategory === "todas" || doc.categoria === selectedCategory;
     return matchSearch && matchCategory;
   });
 
-  const handleFileUpload = (files: File[]) => {
-    // Apenas exemplo: adicionar ao array no local state!
-    const novosDoc = files.map((file, i) => ({
-      id: Date.now() + i,
-      nome: file.name,
-      tipo: file.name.split('.').pop()?.toUpperCase() || "Desconhecido",
-      categoria: "Sem Categoria",
-      cliente: "Desconhecido",
-      tamanho: `${(file.size / 1024).toFixed(0)} KB`,
-      dataUpload: new Date().toLocaleDateString(),
-      status: "pendente",
-      conteudo: "", // Não armazenando de verdade
-    }));
-    setDocumentos((docAntigos) => [...novosDoc, ...docAntigos]);
+  // FileUpload não salvará mais no local, apenas dará um feedback (pode expandir depois com upload real)
+  const handleFileUpload = (_files: File[]) => {
     toast({
-      title: "Upload realizado",
-      description: `${files.length} arquivo(s) enviado(s) com sucesso!`,
+      title: "Upload simulado",
+      description: `Funcionalidade de upload real em breve!`,
     });
   };
 
@@ -175,13 +107,13 @@ const Documentos = () => {
   }
 
   function handleConfirmarExcluir() {
-    setDocumentos(docs => docs.filter(doc => doc.id !== modalExcluir));
     toast({
-      title: "Documento excluído",
-      description: "O documento foi removido com sucesso.",
+      title: "Funcionalidade futura",
+      description: "Em breve será possível excluir de verdade do banco.",
       variant: "destructive",
     });
     setModalExcluir(null);
+    // Futuramente: integrar com supabase para deletar!
   }
 
   // Adicionar referência ao FileUpload e um método para acionar o input
@@ -271,6 +203,8 @@ const Documentos = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {isLoading && <div className="text-gray-400 text-center py-12">Carregando documentos...</div>}
+          {erro && <div className="text-red-500 text-center py-12">{erro}</div>}
           <div className="space-y-4">
             {documentosFiltrados.map((documento) => (
               <div key={documento.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
@@ -279,12 +213,14 @@ const Documentos = () => {
                   <div className="flex-1">
                     <h3 className="font-medium text-gray-900">{documento.nome}</h3>
                     <div className="flex items-center space-x-4 mt-1">
-                      <span className="text-sm text-gray-500">{documento.cliente}</span>
+                      <span className="text-sm text-gray-500">Cliente ID: {documento.cliente_id ?? "N/A"}</span>
                       <Badge variant="default" className="text-xs">
-                        {documento.categoria}
+                        {documento.categoria ?? "Sem categoria"}
                       </Badge>
                       <span className="text-sm text-gray-500">{documento.tamanho}</span>
-                      <span className="text-sm text-gray-500">{documento.dataUpload}</span>
+                      <span className="text-sm text-gray-500">
+                        {documento.data_upload ? new Date(documento.data_upload).toLocaleDateString() : ""}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -321,7 +257,7 @@ const Documentos = () => {
               </div>
             ))}
           </div>
-          {documentosFiltrados.length === 0 && (
+          {documentosFiltrados.length === 0 && !isLoading && (
             <div className="text-center py-12">
               <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500">Nenhum documento encontrado</p>
@@ -355,11 +291,11 @@ const Documentos = () => {
           </DialogHeader>
           <div className="space-y-2 text-sm">
             <div><span className="font-semibold">Nome:</span> {modalVisualizar?.nome}</div>
-            <div><span className="font-semibold">Cliente:</span> {modalVisualizar?.cliente}</div>
+            <div><span className="font-semibold">Cliente:</span> {modalVisualizar?.cliente_id}</div>
             <div><span className="font-semibold">Categoria:</span> {modalVisualizar?.categoria}</div>
             <div><span className="font-semibold">Tipo:</span> {modalVisualizar?.tipo}</div>
             <div><span className="font-semibold">Tamanho:</span> {modalVisualizar?.tamanho}</div>
-            <div><span className="font-semibold">Data de Upload:</span> {modalVisualizar?.dataUpload}</div>
+            <div><span className="font-semibold">Data de Upload:</span> {modalVisualizar?.data_upload ? new Date(modalVisualizar.data_upload).toLocaleDateString() : ""}</div>
             <div><span className="font-semibold">Status:</span> {modalVisualizar && getStatusBadge(modalVisualizar.status)}</div>
           </div>
           <DialogFooter>
