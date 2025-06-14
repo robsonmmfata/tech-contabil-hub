@@ -81,11 +81,11 @@ const Documentos = () => {
       case 'processado':
         return <Badge variant="default" className="bg-green-50 text-green-700 border-green-200">Processado</Badge>;
       case 'pendente':
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pendente</Badge>;
+        return <Badge variant="default" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pendente</Badge>;
       case 'erro':
         return <Badge variant="destructive">Erro</Badge>;
       default:
-        return <Badge variant="outline">Desconhecido</Badge>;
+        return <Badge variant="default">Desconhecido</Badge>;
     }
   };
 
