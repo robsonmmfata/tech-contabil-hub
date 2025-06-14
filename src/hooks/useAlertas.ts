@@ -1,37 +1,67 @@
 
-import { useState } from "react";
-
-// Altere esse array quando for integrar com backend real
-const ALERTAS_MOCK = [
-  {
-    id: 1,
-    title: "Vencimento próximo",
-    description: "DAS para Tech Solutions Ltda vence em 3 dias.",
-    type: "alerta" as "alerta",
-  },
-  {
-    id: 2,
-    title: "Nova obrigação criada",
-    description: "Foi criada uma nova obrigação para DevCorp.",
-    type: "info" as "info",
-  },
-  {
-    id: 3,
-    title: "Receita recebida",
-    description: "Receita da CodeMaster foi marcada como paga.",
-    type: "success" as "success",
-  },
-];
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export type AlertaCRM = {
   id: number;
   title: string;
   description: string;
   type: "alerta" | "success" | "info";
+  created_at?: string | null;
 };
 
-export function useAlertas() {
-  // Substitua por lógica de fetch (Supabase, API, etc) quando necessário
-  const [alertas] = useState<AlertaCRM[]>(ALERTAS_MOCK);
-  return alertas;
+type UseAlertasHookReturn = {
+  alertas: AlertaCRM[];
+  isLoading: boolean;
+  erro: string | null;
+  inserirAlerta: (novoAlerta: Omit<AlertaCRM, "id" | "created_at">) => Promise<void>;
+  recarregar: () => void;
+};
+
+export function useAlertas(): UseAlertasHookReturn {
+  const [alertas, setAlertas] = useState<AlertaCRM[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const buscarAlertas = async () => {
+    setIsLoading(true);
+    setErro(null);
+    const { data, error } = await supabase
+      .from("alertas_crm")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) {
+      setErro(error.message);
+    } else {
+      setAlertas(
+        (data ?? []).map((item) => ({
+          id: item.id,
+          title: item.title,
+          description: item.description || "",
+          type: item.type as "alerta" | "success" | "info",
+          created_at: item.created_at,
+        }))
+      );
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    buscarAlertas();
+  }, []);
+
+  const inserirAlerta = async (novoAlerta: Omit<AlertaCRM, "id" | "created_at">) => {
+    const { error } = await supabase.from("alertas_crm").insert([novoAlerta]);
+    if (error) {
+      setErro(error.message);
+    } else {
+      await buscarAlertas();
+    }
+  };
+
+  const recarregar = () => {
+    buscarAlertas();
+  };
+
+  return { alertas, isLoading, erro, inserirAlerta, recarregar };
 }
