@@ -239,7 +239,7 @@ const Documentos = () => {
                     <h3 className="font-medium text-gray-900">{documento.nome}</h3>
                     <div className="flex items-center space-x-4 mt-1">
                       <span className="text-sm text-gray-500">{documento.cliente}</span>
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="default" className="text-xs">
                         {documento.categoria}
                       </Badge>
                       <span className="text-sm text-gray-500">{documento.tamanho}</span>
