@@ -7,11 +7,16 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NovoServicoModal } from "@/components/modals/NovoServicoModal";
+import { VisualizarServicoModal } from "@/components/modals/VisualizarServicoModal";
+import { UploadDocumentoServicoModal } from "@/components/modals/UploadDocumentoServicoModal";
 import { useToast } from "@/hooks/use-toast";
 
 const Servicos = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
+  const [visualizarModalOpen, setVisualizarModalOpen] = useState(false);
+  const [servicoSelecionado, setServicoSelecionado] = useState<any | null>(null);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const { toast } = useToast();
 
   const services = [
@@ -97,16 +102,22 @@ const Servicos = () => {
   };
 
   const handleView = (serviceId: number) => {
-    toast({
-      title: "Visualizar serviço",
-      description: `Visualizando detalhes do serviço ID: ${serviceId}`,
-    });
+    const servico = services.find(s => s.id === serviceId);
+    setServicoSelecionado(servico);
+    setVisualizarModalOpen(true);
   };
 
   const handleUpload = (serviceId: number) => {
+    const servico = services.find(s => s.id === serviceId);
+    setServicoSelecionado(servico);
+    setUploadModalOpen(true);
+  };
+
+  const handleUploadDocumento = (file: File) => {
+    // Apenas mock, mostra um toast de sucesso
     toast({
-      title: "Upload de arquivo",
-      description: `Fazendo upload para o serviço ID: ${serviceId}`,
+      title: "Upload realizado",
+      description: `Arquivo "${file.name}" enviado para o serviço "${servicoSelecionado?.description}".`,
     });
   };
 
@@ -270,6 +281,25 @@ const Servicos = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Modals */}
+      <VisualizarServicoModal
+        open={visualizarModalOpen}
+        onOpenChange={(open) => {
+          setVisualizarModalOpen(open);
+          if (!open) setServicoSelecionado(null);
+        }}
+        servico={servicoSelecionado}
+      />
+      <UploadDocumentoServicoModal
+        open={uploadModalOpen}
+        onOpenChange={(open) => {
+          setUploadModalOpen(open);
+          if (!open) setServicoSelecionado(null);
+        }}
+        servico={servicoSelecionado}
+        onUpload={handleUploadDocumento}
+      />
     </div>
   );
 };
