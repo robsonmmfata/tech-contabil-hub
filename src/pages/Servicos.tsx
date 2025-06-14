@@ -22,7 +22,7 @@ const Servicos = () => {
   const { toast } = useToast();
 
   // Buscar serviços do Supabase
-  const { servicos, isLoading: isLoadingServicos, erro: erroServicos, recarregar: recarregarServicos } = useServicos();
+  const { servicos, loading: isLoadingServicos, erro: erroServicos, recarregar: recarregarServicos } = useServicos();
   const { clientes } = useClientes();
 
   // Filtros virtuais usando estado

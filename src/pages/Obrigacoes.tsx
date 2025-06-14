@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Calendar, Clock, AlertTriangle, CheckCircle, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +14,7 @@ import { useClientes } from "@/hooks/useClientes";
 
 const Obrigacoes = () => {
   const { toast } = useToast();
-  const { obrigacoes, isLoading: loadingObrigacoes, erro } = useObrigacoes();
+  const { obrigacoes, loading: loadingObrigacoes, erro } = useObrigacoes();
   const { clientes, isLoading: loadingClientes } = useClientes();
 
   const [selectedTab, setSelectedTab] = useState("pendentes");
@@ -311,4 +310,3 @@ const Obrigacoes = () => {
 };
 
 export default Obrigacoes;
-

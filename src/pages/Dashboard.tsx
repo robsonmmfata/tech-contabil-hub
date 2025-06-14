@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Users, FileText, Calendar, DollarSign, AlertTriangle, CheckCircle } from 'lucide-react';
 import { StatsCard } from "@/components/StatsCard";
@@ -20,8 +19,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const { clientes, isLoading: loadingClientes } = useClientes();
-  const { servicos, isLoading: loadingServicos } = useServicos();
-  const { obrigacoes, isLoading: loadingObrigacoes } = useObrigacoes();
+  const { servicos, loading: loadingServicos } = useServicos();
+  const { obrigacoes, loading: loadingObrigacoes } = useObrigacoes();
 
   // Cards Stats
   const totalClientes = clientes.length;
