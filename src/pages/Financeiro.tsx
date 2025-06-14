@@ -23,12 +23,13 @@ const Financeiro = () => {
   const [tipoTransacaoSelecionada, setTipoTransacaoSelecionada] = useState<"receita" | "despesa">("receita");
   const { toast } = useToast();
 
-  const receitas = [
+  // Torna receitas um estado para atualizar na tela
+  const [receitas, setReceitas] = useState([
     { id: 1, cliente: "Tech Solutions Ltda", servico: "DAS + Folha", valor: 1850.00, vencimento: "2024-01-15", status: "pago" },
     { id: 2, cliente: "DevCorp", servico: "IRPJ", valor: 3500.00, vencimento: "2024-01-20", status: "pendente" },
     { id: 3, cliente: "StartupXYZ", servico: "Consultoria", valor: 2200.00, vencimento: "2024-01-25", status: "atrasado" },
     { id: 4, cliente: "CodeMaster", servico: "Contabilidade Mensal", valor: 1200.00, vencimento: "2024-01-30", status: "pago" }
-  ];
+  ]);
 
   const despesas = [
     { id: 1, descricao: "Software Contábil", categoria: "Tecnologia", valor: 450.00, data: "2024-01-05", status: "pago" },
@@ -49,10 +50,24 @@ const Financeiro = () => {
     }
   };
 
+  // Os cálculos precisam usar receitas do estado
   const totalReceitas = receitas.reduce((sum, receita) => sum + receita.valor, 0);
   const totalDespesas = despesas.reduce((sum, despesa) => sum + despesa.valor, 0);
   const lucroLiquido = totalReceitas - totalDespesas;
   const receitasPagas = receitas.filter(r => r.status === 'pago').reduce((sum, receita) => sum + receita.valor, 0);
+
+  // Atualizar status da receita direto no estado
+  const handleReceber = (receitaId: number) => {
+    setReceitas((prevReceitas) =>
+      prevReceitas.map((r) =>
+        r.id === receitaId ? { ...r, status: 'pago' } : r
+      )
+    );
+    toast({
+      title: "Receita recebida",
+      description: `Receita ID ${receitaId} foi marcada como paga!`,
+    });
+  };
 
   const handleExportar = (type?: "pdf" | "xls") => {
     if (!type) {
@@ -119,13 +134,6 @@ const Financeiro = () => {
       toast({ title: "Exportação completa", description: "Arquivo Excel exportado com sucesso!" });
     }
     setModalExportarOpen(false);
-  };
-
-  const handleReceber = (receitaId: number) => {
-    toast({
-      title: "Receita recebida",
-      description: `Receita ID ${receitaId} foi marcada como paga!`,
-    });
   };
 
   const handleVisualizarDocumento = (id: number, tipo: "receita" | "despesa") => {
