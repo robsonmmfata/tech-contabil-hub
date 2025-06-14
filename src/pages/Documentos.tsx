@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { FileText, Upload, Download, Search, Filter, Folder, File, Eye, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +8,15 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/FileUpload";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 // Referência para input da área de upload
 const Documentos = () => {
@@ -15,7 +25,7 @@ const Documentos = () => {
   const { toast } = useToast();
   const uploadInputRef = useRef<HTMLInputElement>(null);
 
-  const documentos = [
+  const [documentos, setDocumentos] = useState([
     {
       id: 1,
       nome: "DAS_TechSolutions_Jan2024.pdf",
@@ -24,7 +34,8 @@ const Documentos = () => {
       cliente: "Tech Solutions Ltda",
       tamanho: "245 KB",
       dataUpload: "15/01/2024",
-      status: "processado"
+      status: "processado",
+      conteudo: "",
     },
     {
       id: 2,
@@ -34,7 +45,8 @@ const Documentos = () => {
       cliente: "DevCorp",
       tamanho: "12 KB",
       dataUpload: "14/01/2024",
-      status: "pendente"
+      status: "pendente",
+      conteudo: "",
     },
     {
       id: 3,
@@ -44,7 +56,8 @@ const Documentos = () => {
       cliente: "StartupXYZ",
       tamanho: "1.2 MB",
       dataUpload: "13/01/2024",
-      status: "processado"
+      status: "processado",
+      conteudo: "",
     },
     {
       id: 4,
@@ -54,7 +67,8 @@ const Documentos = () => {
       cliente: "CodeMaster",
       tamanho: "89 KB",
       dataUpload: "12/01/2024",
-      status: "processado"
+      status: "processado",
+      conteudo: "",
     },
     {
       id: 5,
@@ -64,9 +78,13 @@ const Documentos = () => {
       cliente: "WebDesign Pro",
       tamanho: "156 KB",
       dataUpload: "11/01/2024",
-      status: "processado"
+      status: "processado",
+      conteudo: "",
     }
-  ];
+  ]);
+
+  const [modalVisualizar, setModalVisualizar] = useState<null | typeof documentos[0]>(null);
+  const [modalExcluir, setModalExcluir] = useState<number | null>(null);
 
   const categorias = [
     { nome: "Impostos", count: 15, cor: "blue" },
@@ -104,42 +122,67 @@ const Documentos = () => {
 
   const documentosFiltrados = documentos.filter(doc => {
     const matchSearch = doc.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       doc.cliente.toLowerCase().includes(searchTerm.toLowerCase());
+      doc.cliente.toLowerCase().includes(searchTerm.toLowerCase());
     const matchCategory = selectedCategory === "todas" || doc.categoria === selectedCategory;
     return matchSearch && matchCategory;
   });
 
   const handleFileUpload = (files: File[]) => {
-    console.log('Files uploaded:', files);
+    // Apenas exemplo: adicionar ao array no local state!
+    const novosDoc = files.map((file, i) => ({
+      id: Date.now() + i,
+      nome: file.name,
+      tipo: file.name.split('.').pop()?.toUpperCase() || "Desconhecido",
+      categoria: "Sem Categoria",
+      cliente: "Desconhecido",
+      tamanho: `${(file.size / 1024).toFixed(0)} KB`,
+      dataUpload: new Date().toLocaleDateString(),
+      status: "pendente",
+      conteudo: "", // Não armazenando de verdade
+    }));
+    setDocumentos((docAntigos) => [...novosDoc, ...docAntigos]);
     toast({
       title: "Upload realizado",
       description: `${files.length} arquivo(s) enviado(s) com sucesso!`,
     });
   };
 
-  const handleVisualizarDocumento = (documentoId: number) => {
-    toast({
-      title: "Visualizar documento",
-      description: `Função de visualização para documento ID: ${documentoId} não está implementada.`,
-      variant: "default",
-    });
-  };
+  // MODAIS E FUNÇÕES DE AÇÃO
+  function handleVisualizarDocumento(documentoId: number) {
+    const doc = documentos.find(d => d.id === documentoId);
+    setModalVisualizar(doc || null);
+  }
 
-  const handleDownloadDocumento = (documentoId: number) => {
+  function handleDownloadDocumento(documentoId: number) {
+    const doc = documentos.find(d => d.id === documentoId);
+    if (!doc) return;
+    // simulação de download
+    const blob = new Blob([""], { type: "application/octet-stream" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = doc.nome;
+    link.click();
+    URL.revokeObjectURL(link.href);
     toast({
       title: "Download iniciado",
-      description: `Função de download para documento ID: ${documentoId} não está implementada.`,
+      description: `Baixando "${doc.nome}"...`,
       variant: "default",
     });
-  };
+  }
 
-  const handleDeletarDocumento = (documentoId: number) => {
+  function handleDeletarDocumento(documentoId: number) {
+    setModalExcluir(documentoId);
+  }
+
+  function handleConfirmarExcluir() {
+    setDocumentos(docs => docs.filter(doc => doc.id !== modalExcluir));
     toast({
       title: "Documento excluído",
-      description: `Função de exclusão (com confirmação) para documento ID ${documentoId} não está implementada.`,
+      description: "O documento foi removido com sucesso.",
       variant: "destructive",
     });
-  };
+    setModalExcluir(null);
+  }
 
   // Adicionar referência ao FileUpload e um método para acionar o input
   const fileUploadRef = useRef<HTMLInputElement | null>(null);
@@ -154,11 +197,9 @@ const Documentos = () => {
         <Button
           className="flex items-center space-x-2"
           onClick={() => {
-            // Ao clicar, aciona o input da área de upload drag-and-drop
             if (fileUploadRef.current) {
               fileUploadRef.current.click();
             } else {
-              // fallback: toast se não encontrar input
               toast({ title: "Erro", description: "Área de upload não encontrada." });
             }
           }}
@@ -293,7 +334,6 @@ const Documentos = () => {
       {/* Área de Upload (Drag & Drop) */}
       <Card>
         <CardContent className="p-8">
-          {/* Passa a ref para acessar o input do FileUpload */}
           <FileUpload
             onFileUpload={handleFileUpload}
             // @ts-ignore
@@ -301,6 +341,50 @@ const Documentos = () => {
           />
         </CardContent>
       </Card>
+
+      {/* Modal Visualizar Documento */}
+      <Dialog open={!!modalVisualizar} onOpenChange={() => setModalVisualizar(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Visualizar Documento
+            </DialogTitle>
+            <DialogDescription>
+              Informações detalhadas do documento.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 text-sm">
+            <div><span className="font-semibold">Nome:</span> {modalVisualizar?.nome}</div>
+            <div><span className="font-semibold">Cliente:</span> {modalVisualizar?.cliente}</div>
+            <div><span className="font-semibold">Categoria:</span> {modalVisualizar?.categoria}</div>
+            <div><span className="font-semibold">Tipo:</span> {modalVisualizar?.tipo}</div>
+            <div><span className="font-semibold">Tamanho:</span> {modalVisualizar?.tamanho}</div>
+            <div><span className="font-semibold">Data de Upload:</span> {modalVisualizar?.dataUpload}</div>
+            <div><span className="font-semibold">Status:</span> {modalVisualizar && getStatusBadge(modalVisualizar.status)}</div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="secondary">Fechar</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Confirmar Exclusão */}
+      <Dialog open={!!modalExcluir} onOpenChange={() => setModalExcluir(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar Exclusão</DialogTitle>
+            <DialogDescription>
+              Tem certeza de que deseja excluir este documento? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setModalExcluir(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={handleConfirmarExcluir}>Excluir</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
