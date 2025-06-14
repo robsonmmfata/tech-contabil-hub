@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { FileText, Upload, Download, Search, Filter, Folder, File, Eye, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,10 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileUpload } from "@/components/FileUpload";
 import { useToast } from "@/hooks/use-toast";
 
+// Referência para input da área de upload
 const Documentos = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("todas");
   const { toast } = useToast();
+  const uploadInputRef = useRef<HTMLInputElement>(null);
 
   const documentos = [
     {
@@ -119,24 +120,29 @@ const Documentos = () => {
   const handleVisualizarDocumento = (documentoId: number) => {
     toast({
       title: "Visualizar documento",
-      description: `Abrindo documento ID: ${documentoId}`,
+      description: `Função de visualização para documento ID: ${documentoId} não está implementada.`,
+      variant: "outline",
     });
   };
 
   const handleDownloadDocumento = (documentoId: number) => {
     toast({
       title: "Download iniciado",
-      description: `Baixando documento ID: ${documentoId}`,
+      description: `Função de download para documento ID: ${documentoId} não está implementada.`,
+      variant: "outline",
     });
   };
 
   const handleDeletarDocumento = (documentoId: number) => {
     toast({
       title: "Documento excluído",
-      description: `Documento ID ${documentoId} foi excluído!`,
+      description: `Função de exclusão (com confirmação) para documento ID ${documentoId} não está implementada.`,
       variant: "destructive",
     });
   };
+
+  // Adicionar referência ao FileUpload e um método para acionar o input
+  const fileUploadRef = useRef<HTMLInputElement | null>(null);
 
   return (
     <div className="space-y-6">
@@ -145,7 +151,18 @@ const Documentos = () => {
           <h1 className="text-3xl font-bold text-gray-900">Documentos</h1>
           <p className="text-gray-500 mt-1">Central de documentos e arquivos dos clientes</p>
         </div>
-        <Button className="flex items-center space-x-2" onClick={() => toast({ title: "Upload", description: "Use a área de upload abaixo" })}>
+        <Button
+          className="flex items-center space-x-2"
+          onClick={() => {
+            // Ao clicar, aciona o input da área de upload drag-and-drop
+            if (fileUploadRef.current) {
+              fileUploadRef.current.click();
+            } else {
+              // fallback: toast se não encontrar input
+              toast({ title: "Erro", description: "Área de upload não encontrada." });
+            }
+          }}
+        >
           <Upload className="h-4 w-4" />
           <span>Upload de Documentos</span>
         </Button>
@@ -233,13 +250,29 @@ const Documentos = () => {
                 <div className="flex items-center space-x-2">
                   {getStatusBadge(documento.status)}
                   <div className="flex space-x-1 ml-4">
-                    <Button size="sm" variant="outline" onClick={() => handleVisualizarDocumento(documento.id)}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleVisualizarDocumento(documento.id)}
+                      aria-label="Visualizar"
+                    >
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleDownloadDocumento(documento.id)}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDownloadDocumento(documento.id)}
+                      aria-label="Download"
+                    >
                       <Download className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700" onClick={() => handleDeletarDocumento(documento.id)}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-red-600 hover:text-red-700"
+                      onClick={() => handleDeletarDocumento(documento.id)}
+                      aria-label="Excluir"
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -247,7 +280,6 @@ const Documentos = () => {
               </div>
             ))}
           </div>
-
           {documentosFiltrados.length === 0 && (
             <div className="text-center py-12">
               <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
@@ -261,7 +293,12 @@ const Documentos = () => {
       {/* Área de Upload (Drag & Drop) */}
       <Card>
         <CardContent className="p-8">
-          <FileUpload onFileUpload={handleFileUpload} />
+          {/* Passa a ref para acessar o input do FileUpload */}
+          <FileUpload
+            onFileUpload={handleFileUpload}
+            // @ts-ignore
+            inputRef={fileUploadRef}
+          />
         </CardContent>
       </Card>
     </div>

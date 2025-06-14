@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import { Upload } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -8,14 +8,18 @@ interface FileUploadProps {
   onFileUpload: (files: File[]) => void;
   acceptedTypes?: string[];
   multiple?: boolean;
+  // opcional, para permitir controle externo do input
+  inputRef?: React.RefObject<HTMLInputElement>;
 }
 
-export const FileUpload: React.FC<FileUploadProps> = ({ 
-  onFileUpload, 
-  acceptedTypes = ['.pdf', '.xlsx', '.xls', '.csv'], 
-  multiple = true 
+export const FileUpload: React.FC<FileUploadProps> = ({
+  onFileUpload,
+  acceptedTypes = ['.pdf', '.xlsx', '.xls', '.csv'],
+  multiple = true,
+  inputRef,
 }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const internalRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = inputRef ? inputRef : internalRef;
   const [dragActive, setDragActive] = useState(false);
   const { toast } = useToast();
 
@@ -69,9 +73,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   return (
     <div className="w-full">
       <div
-        className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors cursor-pointer ${
-          dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
-        }`}
+        className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors cursor-pointer ${dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+          }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
