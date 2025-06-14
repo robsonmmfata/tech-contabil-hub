@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, Search, Filter, Edit, Trash2, Building, User, Eye } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -7,13 +6,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { NovoClienteModal } from "@/components/modals/NovoClienteModal";
+import { VisualizarClienteModal } from "@/components/modals/VisualizarClienteModal";
+import { EditarClienteModal } from "@/components/modals/EditarClienteModal";
+import { ConfirmarRemoverClienteModal } from "@/components/modals/ConfirmarRemoverClienteModal";
 import { useToast } from "@/hooks/use-toast";
 
 const Clientes = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
 
-  const clients = [
+  // Adicionando estado para modais e clientes
+  const [clienteSelecionado, setClienteSelecionado] = useState<any | null>(null);
+  const [verModal, setVerModal] = useState(false);
+  const [editarModal, setEditarModal] = useState(false);
+  const [removerModal, setRemoverModal] = useState(false);
+  const [clientes, setClientes] = useState([
     {
       id: 1,
       name: "Tech Solutions LTDA",
@@ -47,9 +54,9 @@ const Clientes = () => {
       status: "inativo",
       cnaes: ["7311-4/00", "6201-5/00"]
     }
-  ];
+  ]);
 
-  const filteredClients = clients.filter(client =>
+  const filteredClients = clientes.filter(client =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.document.includes(searchTerm) ||
     client.contact.toLowerCase().includes(searchTerm.toLowerCase())
@@ -63,37 +70,67 @@ const Clientes = () => {
     return type === 'empresa' ? Building : User;
   };
 
-  const handleEdit = (clientId: number) => {
-    toast({
-      title: "Editar cliente",
-      description: `Editando cliente ID: ${clientId}`,
-    });
+  // Funções novas para abrir os modais e manipular o estado dos clientes
+  const handleView = (client: any) => {
+    setClienteSelecionado(client);
+    setVerModal(true);
   };
 
-  const handleDelete = (clientId: number) => {
+  const handleEdit = (client: any) => {
+    setClienteSelecionado(client);
+    setEditarModal(true);
+  };
+
+  const handleSaveEdit = (formEdits: any) => {
+    setClientes(prev =>
+      prev.map(c =>
+        c.id === clienteSelecionado.id ? { ...c, ...formEdits } : c
+      )
+    );
+    toast({
+      title: "Cliente editado",
+      description: `Cliente atualizado com sucesso!`,
+    });
+    setClienteSelecionado(null);
+  };
+
+  const handleDelete = (client: any) => {
+    setClienteSelecionado(client);
+    setRemoverModal(true);
+  };
+
+  const handleConfirmRemove = () => {
+    setClientes(prev =>
+      prev.filter(c => c.id !== clienteSelecionado.id)
+    );
     toast({
       title: "Cliente removido",
       description: "Cliente foi removido com sucesso!",
       variant: "destructive",
     });
-  };
-
-  const handleView = (clientId: number) => {
-    toast({
-      title: "Visualizar cliente",
-      description: `Visualizando detalhes do cliente ID: ${clientId}`,
-    });
+    setClienteSelecionado(null);
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Clientes</h1>
-          <p className="text-gray-600 mt-1">Gerencie seus clientes e suas informações fiscais</p>
-        </div>
-        <NovoClienteModal />
-      </div>
+      {/* Modais */}
+      <VisualizarClienteModal
+        open={verModal}
+        onOpenChange={(open) => { setVerModal(open); if (!open) setClienteSelecionado(null); }}
+        client={clienteSelecionado}
+      />
+      <EditarClienteModal
+        open={editarModal}
+        onOpenChange={(open) => { setEditarModal(open); if (!open) setClienteSelecionado(null); }}
+        client={clienteSelecionado}
+        onSave={handleSaveEdit}
+      />
+      <ConfirmarRemoverClienteModal
+        open={removerModal}
+        onOpenChange={(open) => { setRemoverModal(open); if (!open) setClienteSelecionado(null); }}
+        client={clienteSelecionado}
+        onConfirm={handleConfirmRemove}
+      />
 
       {/* Filters */}
       <Card>
@@ -168,13 +205,13 @@ const Clientes = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleView(client.id)}>
+                        <Button variant="ghost" size="sm" onClick={() => handleView(client)}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(client.id)}>
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(client)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => handleDelete(client.id)}>
+                        <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => handleDelete(client)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
