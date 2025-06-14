@@ -38,7 +38,17 @@ export function useClientes(): UseClientesHookReturn {
     if (error) {
       setErro(error.message);
     } else {
-      setClientes(data || []);
+      // Filtra e ajusta para garantir que tipo é do tipo esperado
+      const clientesValidos: Cliente[] = (data || [])
+        .filter(
+          (cli): cli is Omit<Cliente, "tipo"> & { tipo: string } =>
+            cli.tipo === "empresa" || cli.tipo === "autonomo"
+        )
+        .map((cli) => ({
+          ...cli,
+          tipo: cli.tipo === "empresa" ? "empresa" : "autonomo",
+        }));
+      setClientes(clientesValidos);
     }
     setIsLoading(false);
   };
