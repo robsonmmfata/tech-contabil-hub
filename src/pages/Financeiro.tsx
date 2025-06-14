@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ExportarFinanceiroModal } from "@/components/modals/ExportarFinanceiroModal";
 
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import "jspdf-autotable";
 import * as XLSX from "xlsx";
 
 const Financeiro = () => {
