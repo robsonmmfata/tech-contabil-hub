@@ -7,30 +7,11 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { UserProfile } from "./UserProfile";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-
-// Exemplo de notificações — ajuste conforme necessidade
-const notifications = [
-  {
-    id: 1,
-    title: "Vencimento próximo",
-    description: "DAS para Tech Solutions Ltda vence em 3 dias.",
-    type: "alerta"
-  },
-  {
-    id: 2,
-    title: "Nova obrigação criada",
-    description: "Foi criada uma nova obrigação para DevCorp.",
-    type: "info"
-  },
-  {
-    id: 3,
-    title: "Receita recebida",
-    description: "Receita da CodeMaster foi marcada como paga.",
-    type: "success"
-  }
-];
+import { useAlertas } from "@/hooks/useAlertas";
 
 export const Header = () => {
+  const alertas = useAlertas();
+
   return (
     <header className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-6">
       <div className="flex items-center space-x-4">
@@ -50,17 +31,17 @@ export const Header = () => {
             <Button variant="ghost" size="sm" className="relative">
               <Bell className="h-5 w-5" />
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {notifications.length}
+                {alertas.length}
               </span>
             </Button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-80 p-3">
             <div className="font-semibold mb-2">Notificações</div>
-            {notifications.length === 0 ? (
+            {alertas.length === 0 ? (
               <div className="text-gray-500 text-sm">Sem notificações recentes.</div>
             ) : (
               <ul className="space-y-3">
-                {notifications.map((n) => (
+                {alertas.map((n) => (
                   <li key={n.id} className="flex items-start space-x-2">
                     <div>
                       <div className="flex items-center space-x-1">
