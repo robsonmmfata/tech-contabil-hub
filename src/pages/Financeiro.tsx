@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FluxoCaixaChart } from "@/components/charts/FluxoCaixaChart";
 import { NovaTransacaoModal } from "@/components/modals/NovaTransacaoModal";
+import { VisualizarTransacaoModal } from "@/components/modals/VisualizarTransacaoModal";
 import { useToast } from "@/hooks/use-toast";
 import { ExportarFinanceiroModal } from "@/components/modals/ExportarFinanceiroModal";
 
@@ -17,6 +18,9 @@ import * as XLSX from "xlsx";
 const Financeiro = () => {
   const [selectedTab, setSelectedTab] = useState("receitas");
   const [modalExportarOpen, setModalExportarOpen] = useState(false);
+  const [modalVisualizarOpen, setModalVisualizarOpen] = useState(false);
+  const [transacaoSelecionada, setTransacaoSelecionada] = useState<any>(null);
+  const [tipoTransacaoSelecionada, setTipoTransacaoSelecionada] = useState<"receita" | "despesa">("receita");
   const { toast } = useToast();
 
   const receitas = [
@@ -124,15 +128,29 @@ const Financeiro = () => {
     });
   };
 
-  const handleVisualizarDocumento = (id: number) => {
-    toast({
-      title: "Visualizar documento",
-      description: `Abrindo documento ID: ${id}`,
-    });
+  const handleVisualizarDocumento = (id: number, tipo: "receita" | "despesa") => {
+    if (tipo === "receita") {
+      const receita = receitas.find(r => r.id === id);
+      setTransacaoSelecionada(receita);
+      setTipoTransacaoSelecionada("receita");
+    } else {
+      const despesa = despesas.find(d => d.id === id);
+      setTransacaoSelecionada(despesa);
+      setTipoTransacaoSelecionada("despesa");
+    }
+    setModalVisualizarOpen(true);
   };
 
   return (
     <div className="space-y-6">
+      {/* Modal Visualizar Documento */}
+      <VisualizarTransacaoModal
+        open={modalVisualizarOpen}
+        onOpenChange={setModalVisualizarOpen}
+        transacao={transacaoSelecionada}
+        tipo={tipoTransacaoSelecionada}
+      />
+
       <ExportarFinanceiroModal
         open={modalExportarOpen}
         onClose={() => setModalExportarOpen(false)}
@@ -253,7 +271,7 @@ const Financeiro = () => {
                       <TableCell>{getStatusBadge(receita.status)}</TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          <Button size="sm" variant="outline" onClick={() => handleVisualizarDocumento(receita.id)}>
+                          <Button size="sm" variant="outline" onClick={() => handleVisualizarDocumento(receita.id, "receita")}>
                             <FileText className="h-4 w-4" />
                           </Button>
                           {receita.status !== 'pago' && (
@@ -290,7 +308,7 @@ const Financeiro = () => {
                       <TableCell>{despesa.data}</TableCell>
                       <TableCell>{getStatusBadge(despesa.status)}</TableCell>
                       <TableCell>
-                        <Button size="sm" variant="outline" onClick={() => handleVisualizarDocumento(despesa.id)}>
+                        <Button size="sm" variant="outline" onClick={() => handleVisualizarDocumento(despesa.id, "despesa")}>
                           <FileText className="h-4 w-4" />
                         </Button>
                       </TableCell>
