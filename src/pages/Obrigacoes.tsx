@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import { Calendar, Clock, AlertTriangle, CheckCircle, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,27 +10,57 @@ import { NovaObrigacaoModal } from "@/components/modals/NovaObrigacaoModal";
 import { VisualizarObrigacaoModal } from "@/components/modals/VisualizarObrigacaoModal";
 import { ConfirmarConcluirObrigacaoModal } from "@/components/modals/ConfirmarConcluirObrigacaoModal";
 import { useToast } from "@/hooks/use-toast";
+import { useObrigacoes } from "@/hooks/useObrigacoes";
+import { useClientes } from "@/hooks/useClientes";
 
 const Obrigacoes = () => {
-  const obrigacoesPendentes = [
-    { id: 1, cliente: "Tech Solutions Ltda", tipo: "DAS", vencimento: "2024-01-15", status: "pendente", valor: "R$ 1.250,00" },
-    { id: 2, cliente: "DevCorp", tipo: "IRPJ", vencimento: "2024-01-20", status: "atrasado", valor: "R$ 3.500,00" },
-    { id: 3, cliente: "StartupXYZ", tipo: "Folha de Pagamento", vencimento: "2024-01-25", status: "pendente", valor: "R$ 850,00" },
-    { id: 4, cliente: "CodeMaster", tipo: "ICMS", vencimento: "2024-01-30", status: "pendente", valor: "R$ 2.100,00" }
-  ];
-
-  const obrigacoesConcluidas = [
-    { id: 5, cliente: "WebDesign Pro", tipo: "DAS", vencimento: "2024-01-05", status: "concluido", valor: "R$ 980,00" },
-    { id: 6, cliente: "AppDev Inc", tipo: "ISS", vencimento: "2024-01-10", status: "concluido", valor: "R$ 1.500,00" }
-  ];
+  const { toast } = useToast();
+  const { obrigacoes, isLoading: loadingObrigacoes, erro } = useObrigacoes();
+  const { clientes, isLoading: loadingClientes } = useClientes();
 
   const [selectedTab, setSelectedTab] = useState("pendentes");
   const [modalVisualizarOpen, setModalVisualizarOpen] = useState(false);
   const [obrigacaoSelecionada, setObrigacaoSelecionada] = useState<any | null>(null);
   const [modalConcluirOpen, setModalConcluirOpen] = useState(false);
-  const [obrPend, setObrPend] = useState(obrigacoesPendentes);
-  const [obrConc, setObrConc] = useState(obrigacoesConcluidas);
-  const { toast } = useToast();
+
+  // Separar obrigações por status
+  const obrPend = useMemo(
+    () => obrigacoes.filter(o => o.status === "pendente" || o.status === "atrasado"),
+    [obrigacoes]
+  );
+  const obrConc = useMemo(
+    () => obrigacoes.filter(o => o.status === "concluido"),
+    [obrigacoes]
+  );
+
+  // Para alertas: considerar obrigações com data próxima ao vencimento e pendentes/atrasadas (próximos 14 dias)
+  const alertasProximos = useMemo(() => {
+    const hoje = new Date();
+    return obrPend
+      .filter(o => {
+        const venc = new Date(o.vencimento);
+        const diffDias = (venc.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24);
+        return diffDias <= 14 && diffDias >= 0;
+      })
+      .map(o => {
+        const cliente = clientes.find(c => c.id === o.cliente_id);
+        const diffDias = Math.ceil((new Date(o.vencimento).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+        return {
+          cliente: cliente ? cliente.nome : "Cliente não encontrado",
+          obrigacao: o.tipo,
+          dias: diffDias,
+        }
+      });
+  }, [obrPend, clientes]);
+
+  // Resumos
+  const totalPendentes = obrPend.length;
+  const totalAtrasadas = obrPend.filter(o => o.status === "atrasado").length;
+  const totalConcluidas = obrConc.length;
+  const totalEsteMes = useMemo(() => {
+    const mesAtual = new Date().getMonth();
+    return obrigacoes.filter(o => new Date(o.vencimento).getMonth() === mesAtual).length;
+  }, [obrigacoes]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -44,12 +75,6 @@ const Obrigacoes = () => {
     }
   };
 
-  const alertasProximos = [
-    { cliente: "Tech Solutions Ltda", obrigacao: "DAS", dias: 3 },
-    { cliente: "DevCorp", obrigacao: "IRPJ", dias: 8 },
-    { cliente: "StartupXYZ", obrigacao: "Folha", dias: 12 }
-  ];
-
   const handleConcluir = (obrigacaoId: number) => {
     const obrigacao = obrPend.find((o) => o.id === obrigacaoId);
     setObrigacaoSelecionada(obrigacao || null);
@@ -57,23 +82,26 @@ const Obrigacoes = () => {
   };
 
   const handleConfirmarConcluir = () => {
-    if (!obrigacaoSelecionada) return;
-    setObrPend((prev) => prev.filter((o) => o.id !== obrigacaoSelecionada.id));
-    setObrConc((prev) => [
-      ...prev,
-      { ...obrigacaoSelecionada, status: "concluido" }
-    ]);
     toast({
-      title: "Obrigação concluída",
-      description: `Obrigação "${obrigacaoSelecionada.tipo}" foi marcada como concluída!`,
+      title: "Obrigação concluída (mock)",
+      description: "Funcionalidade de conclusão ainda não implementada para atualizar status no banco.",
     });
     setModalConcluirOpen(false);
     setObrigacaoSelecionada(null);
   };
 
   const handleVisualizarDocumento = (obrigacaoId: number) => {
-    const obrigacao = obrPend.find((o) => o.id === obrigacaoId) || obrConc.find((o) => o.id === obrigacaoId);
-    setObrigacaoSelecionada(obrigacao || null);
+    const obrigacao = obrigacoes.find((o) => o.id === obrigacaoId);
+    if (!obrigacao) return;
+    const cliente = clientes.find(c => c.id === obrigacao.cliente_id);
+    setObrigacaoSelecionada({
+      id: obrigacao.id,
+      cliente: cliente ? cliente.nome : "Cliente não encontrado",
+      tipo: obrigacao.tipo,
+      vencimento: new Date(obrigacao.vencimento).toLocaleDateString("pt-BR"),
+      status: obrigacao.status,
+      valor: obrigacao.valor ? `R$ ${Number(obrigacao.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—"
+    });
     setModalVisualizarOpen(true);
   };
 
@@ -86,7 +114,6 @@ const Obrigacoes = () => {
         </div>
         <NovaObrigacaoModal />
       </div>
-
       {/* Cards de Resumo */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
@@ -94,50 +121,46 @@ const Obrigacoes = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Pendentes</p>
-                <p className="text-2xl font-bold text-yellow-600">4</p>
+                <p className="text-2xl font-bold text-yellow-600">{loadingObrigacoes ? "..." : totalPendentes}</p>
               </div>
               <Clock className="h-8 w-8 text-yellow-600" />
             </div>
           </CardContent>
         </Card>
-
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Atrasadas</p>
-                <p className="text-2xl font-bold text-red-600">1</p>
+                <p className="text-2xl font-bold text-red-600">{loadingObrigacoes ? "..." : totalAtrasadas}</p>
               </div>
               <AlertTriangle className="h-8 w-8 text-red-600" />
             </div>
           </CardContent>
         </Card>
-
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Concluídas</p>
-                <p className="text-2xl font-bold text-green-600">2</p>
+                <p className="text-2xl font-bold text-green-600">{loadingObrigacoes ? "..." : totalConcluidas}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
           </CardContent>
         </Card>
-
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Este Mês</p>
-                <p className="text-2xl font-bold text-blue-600">7</p>
+                <p className="text-2xl font-bold text-blue-600">{loadingObrigacoes ? "..." : totalEsteMes}</p>
               </div>
               <Calendar className="h-8 w-8 text-blue-600" />
             </div>
           </CardContent>
         </Card>
       </div>
-
       {/* Alertas de Prazos */}
       <Card>
         <CardHeader>
@@ -148,21 +171,24 @@ const Obrigacoes = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {alertasProximos.map((alerta, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
-                <div>
-                  <p className="font-medium text-gray-900">{alerta.cliente}</p>
-                  <p className="text-sm text-gray-600">{alerta.obrigacao}</p>
+            {alertasProximos.length === 0 ? (
+              <div className="text-gray-500">Sem alertas de obrigações para os próximos 14 dias.</div>
+            ) : (
+              alertasProximos.map((alerta, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
+                  <div>
+                    <p className="font-medium text-gray-900">{alerta.cliente}</p>
+                    <p className="text-sm text-gray-600">{alerta.obrigacao}</p>
+                  </div>
+                  <Badge variant="outline" className="bg-orange-100 text-orange-700">
+                    {alerta.dias} dias
+                  </Badge>
                 </div>
-                <Badge variant="outline" className="bg-orange-100 text-orange-700">
-                  {alerta.dias} dias
-                </Badge>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
-
       {/* Tabelas de Obrigações */}
       <Card>
         <CardHeader>
@@ -174,7 +200,6 @@ const Obrigacoes = () => {
               <TabsTrigger value="pendentes">Pendentes</TabsTrigger>
               <TabsTrigger value="concluidas">Concluídas</TabsTrigger>
             </TabsList>
-            
             <TabsContent value="pendentes" className="mt-6">
               <Table>
                 <TableHeader>
@@ -188,29 +213,45 @@ const Obrigacoes = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {obrPend.map((obrigacao) => (
-                    <TableRow key={obrigacao.id}>
-                      <TableCell className="font-medium">{obrigacao.cliente}</TableCell>
-                      <TableCell>{obrigacao.tipo}</TableCell>
-                      <TableCell>{obrigacao.vencimento}</TableCell>
-                      <TableCell>{obrigacao.valor}</TableCell>
-                      <TableCell>{getStatusBadge(obrigacao.status)}</TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button size="sm" variant="outline" onClick={() => handleVisualizarDocumento(obrigacao.id)}>
-                            <FileText className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" onClick={() => handleConcluir(obrigacao.id)}>
-                            Concluir
-                          </Button>
-                        </div>
+                  {loadingObrigacoes || loadingClientes ? (
+                    <TableRow>
+                      <TableCell colSpan={6}>Carregando...</TableCell>
+                    </TableRow>
+                  ) : obrPend.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-gray-500 text-center">
+                        Nenhuma obrigação pendente encontrada.
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    obrPend.map((obrigacao) => {
+                      const cliente = clientes.find(c => c.id === obrigacao.cliente_id);
+                      return (
+                        <TableRow key={obrigacao.id}>
+                          <TableCell className="font-medium">{cliente ? cliente.nome : 'Cliente não encontrado'}</TableCell>
+                          <TableCell>{obrigacao.tipo}</TableCell>
+                          <TableCell>{new Date(obrigacao.vencimento).toLocaleDateString("pt-BR")}</TableCell>
+                          <TableCell>
+                            {obrigacao.valor ? `R$ ${Number(obrigacao.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—"}
+                          </TableCell>
+                          <TableCell>{getStatusBadge(obrigacao.status)}</TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button size="sm" variant="outline" onClick={() => handleVisualizarDocumento(obrigacao.id)}>
+                                <FileText className="h-4 w-4" />
+                              </Button>
+                              <Button size="sm" onClick={() => handleConcluir(obrigacao.id)}>
+                                Concluir
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
                 </TableBody>
               </Table>
             </TabsContent>
-            
             <TabsContent value="concluidas" className="mt-6">
               <Table>
                 <TableHeader>
@@ -223,22 +264,38 @@ const Obrigacoes = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {obrigacoesConcluidas.map((obrigacao) => (
-                    <TableRow key={obrigacao.id}>
-                      <TableCell className="font-medium">{obrigacao.cliente}</TableCell>
-                      <TableCell>{obrigacao.tipo}</TableCell>
-                      <TableCell>{obrigacao.vencimento}</TableCell>
-                      <TableCell>{obrigacao.valor}</TableCell>
-                      <TableCell>{getStatusBadge(obrigacao.status)}</TableCell>
+                  {loadingObrigacoes || loadingClientes ? (
+                    <TableRow>
+                      <TableCell colSpan={5}>Carregando...</TableCell>
                     </TableRow>
-                  ))}
+                  ) : obrConc.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-gray-500 text-center">
+                        Nenhuma obrigação concluída encontrada.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    obrConc.map((obrigacao) => {
+                      const cliente = clientes.find(c => c.id === obrigacao.cliente_id);
+                      return (
+                        <TableRow key={obrigacao.id}>
+                          <TableCell className="font-medium">{cliente ? cliente.nome : 'Cliente não encontrado'}</TableCell>
+                          <TableCell>{obrigacao.tipo}</TableCell>
+                          <TableCell>{new Date(obrigacao.vencimento).toLocaleDateString("pt-BR")}</TableCell>
+                          <TableCell>
+                            {obrigacao.valor ? `R$ ${Number(obrigacao.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—"}
+                          </TableCell>
+                          <TableCell>{getStatusBadge(obrigacao.status)}</TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
                 </TableBody>
               </Table>
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
-
       <VisualizarObrigacaoModal
         open={modalVisualizarOpen}
         onOpenChange={setModalVisualizarOpen}
@@ -254,3 +311,4 @@ const Obrigacoes = () => {
 };
 
 export default Obrigacoes;
+
