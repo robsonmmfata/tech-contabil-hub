@@ -7,9 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export const NovoClienteModal = () => {
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     type: 'empresa',
@@ -20,13 +22,38 @@ export const NovoClienteModal = () => {
   });
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Função para inserir cliente no Supabase
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Novo cliente:', formData);
+    setIsSubmitting(true);
+    // Mapeia os campos do form para os campos do banco.
+    const clienteInsert = {
+      nome: formData.name,
+      tipo: formData.type,
+      documento: formData.document,
+      regime: formData.regime || null,
+      contato: formData.contact,
+      telefone: formData.phone,
+      email: formData.contact, // se desejar usar contact para email
+      status: 'ativo'
+    };
+    const { error } = await supabase.from('clientes').insert([clienteInsert]);
+    if (error) {
+      toast({
+        title: "Erro ao cadastrar",
+        description: error.message,
+        variant: "destructive"
+      });
+      setIsSubmitting(false);
+      return;
+    }
     toast({
       title: "Cliente cadastrado",
       description: "Cliente foi cadastrado com sucesso!",
     });
+    // Dispara evento para atualização das telas conectadas (como Clientes)
+    window.dispatchEvent(new CustomEvent("clientes:recarregar"));
+
     setOpen(false);
     setFormData({
       name: '',
@@ -36,6 +63,7 @@ export const NovoClienteModal = () => {
       contact: '',
       phone: ''
     });
+    setIsSubmitting(false);
   };
 
   return (
@@ -115,10 +143,12 @@ export const NovoClienteModal = () => {
             />
           </div>
           <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>
               Cancelar
             </Button>
-            <Button type="submit">Cadastrar</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Cadastrando..." : "Cadastrar"}
+            </Button>
           </div>
         </form>
       </DialogContent>
