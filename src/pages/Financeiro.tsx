@@ -8,9 +8,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { FluxoCaixaChart } from "@/components/charts/FluxoCaixaChart";
 import { NovaTransacaoModal } from "@/components/modals/NovaTransacaoModal";
 import { useToast } from "@/hooks/use-toast";
+import { ExportarFinanceiroModal } from "@/components/modals/ExportarFinanceiroModal";
+
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 const Financeiro = () => {
   const [selectedTab, setSelectedTab] = useState("receitas");
+  const [modalExportarOpen, setModalExportarOpen] = useState(false);
   const { toast } = useToast();
 
   const receitas = [
@@ -44,11 +50,47 @@ const Financeiro = () => {
   const lucroLiquido = totalReceitas - totalDespesas;
   const receitasPagas = receitas.filter(r => r.status === 'pago').reduce((sum, receita) => sum + receita.valor, 0);
 
-  const handleExportar = () => {
-    toast({
-      title: "Exportando dados",
-      description: "Relatório financeiro está sendo exportado...",
-    });
+  const handleExportar = (type?: "pdf" | "xls") => {
+    if (!type) {
+      setModalExportarOpen(true);
+      return;
+    }
+    if (type === "pdf") {
+      const doc = new jsPDF();
+      // Receitas
+      doc.text("Receitas", 10, 10);
+      (doc as any).autoTable({
+        head: [["Cliente", "Serviço", "Valor", "Vencimento", "Status"]],
+        body: receitas.map(r => [r.cliente, r.servico, `R$ ${r.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, r.vencimento, r.status]),
+        startY: 15
+      });
+      // Despesas
+      let startY = (doc as any).lastAutoTable.finalY + 10;
+      doc.text("Despesas", 10, startY);
+      (doc as any).autoTable({
+        head: [["Descrição", "Categoria", "Valor", "Data", "Status"]],
+        body: despesas.map(d => [d.descricao, d.categoria, `R$ ${d.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, d.data, d.status]),
+        startY: startY + 5
+      });
+      doc.save("financeiro.pdf");
+      toast({title: "Exportação completa", description: "Arquivo PDF exportado com sucesso!"});
+    }
+    if (type === "xls") {
+      const receitasSheet = receitas.map(r => ({
+        Cliente: r.cliente, Serviço: r.servico, Valor: r.valor, Vencimento: r.vencimento, Status: r.status
+      }));
+      const despesasSheet = despesas.map(d => ({
+        Descrição: d.descricao, Categoria: d.categoria, Valor: d.valor, Data: d.data, Status: d.status
+      }));
+      const wb = XLSX.utils.book_new();
+      const wsReceitas = XLSX.utils.json_to_sheet(receitasSheet);
+      const wsDespesas = XLSX.utils.json_to_sheet(despesasSheet);
+      XLSX.utils.book_append_sheet(wb, wsReceitas, "Receitas");
+      XLSX.utils.book_append_sheet(wb, wsDespesas, "Despesas");
+      XLSX.writeFile(wb, "financeiro.xlsx");
+      toast({title: "Exportação completa", description: "Arquivo Excel exportado com sucesso!"});
+    }
+    setModalExportarOpen(false);
   };
 
   const handleReceber = (receitaId: number) => {
@@ -67,13 +109,18 @@ const Financeiro = () => {
 
   return (
     <div className="space-y-6">
+      <ExportarFinanceiroModal
+        open={modalExportarOpen}
+        onClose={() => setModalExportarOpen(false)}
+        onExport={handleExportar}
+      />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Financeiro</h1>
           <p className="text-gray-500 mt-1">Controle financeiro do seu escritório contábil</p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline" className="flex items-center space-x-2" onClick={handleExportar}>
+          <Button variant="outline" className="flex items-center space-x-2" onClick={() => handleExportar()}>
             <Download className="h-4 w-4" />
             <span>Exportar</span>
           </Button>
