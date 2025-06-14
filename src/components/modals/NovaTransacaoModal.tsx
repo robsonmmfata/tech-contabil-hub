@@ -8,9 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { DollarSign } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useClientes } from "@/hooks/useClientes";
 
 export const NovaTransacaoModal = () => {
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     tipo: 'receita',
     descricao: '',
@@ -20,14 +23,45 @@ export const NovaTransacaoModal = () => {
     cliente: ''
   });
   const { toast } = useToast();
+  const { clientes } = useClientes();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Nova transação:', formData);
+    setIsSubmitting(true);
+
+    let cliente_id: number | null = null;
+    if (formData.tipo === "receita") {
+      const selectedCliente = clientes.find(c =>
+        String(c.id) === formData.cliente ||
+        c.nome === formData.cliente
+      );
+      cliente_id = selectedCliente ? selectedCliente.id : null;
+    }
+
+    const transacaoInsert = {
+      tipo: formData.tipo,
+      descricao: formData.descricao,
+      valor: formData.valor ? Number(formData.valor) : null,
+      categoria: formData.categoria,
+      data: formData.data,
+      cliente_id: formData.tipo === "receita" ? cliente_id : null,
+      status: 'pendente'
+    };
+    const { error } = await supabase.from('transacoes_financeiras').insert([transacaoInsert]);
+    if (error) {
+      toast({
+        title: "Erro ao cadastrar",
+        description: error.message,
+        variant: "destructive"
+      });
+      setIsSubmitting(false);
+      return;
+    }
     toast({
       title: "Transação cadastrada",
       description: "Transação foi cadastrada com sucesso!",
     });
+    window.dispatchEvent(new CustomEvent("transacoes:recarregar"));
     setOpen(false);
     setFormData({
       tipo: 'receita',
@@ -37,6 +71,7 @@ export const NovaTransacaoModal = () => {
       data: '',
       cliente: ''
     });
+    setIsSubmitting(false);
   };
 
   return (
@@ -94,9 +129,9 @@ export const NovaTransacaoModal = () => {
                   <SelectValue placeholder="Selecione o cliente" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="tech-solutions">Tech Solutions LTDA</SelectItem>
-                  <SelectItem value="joao-silva">João Silva ME</SelectItem>
-                  <SelectItem value="digital-agency">Digital Agency</SelectItem>
+                  {clientes.map(c => (
+                    <SelectItem key={c.id} value={String(c.id)}>{c.nome}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -136,10 +171,12 @@ export const NovaTransacaoModal = () => {
             />
           </div>
           <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>
               Cancelar
             </Button>
-            <Button type="submit">Cadastrar</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Cadastrando..." : "Cadastrar"}
+            </Button>
           </div>
         </form>
       </DialogContent>

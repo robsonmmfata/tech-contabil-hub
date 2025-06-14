@@ -7,9 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useClientes } from "@/hooks/useClientes";
 
 export const NovaObrigacaoModal = () => {
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     cliente: '',
     tipo: '',
@@ -17,14 +20,41 @@ export const NovaObrigacaoModal = () => {
     valor: ''
   });
   const { toast } = useToast();
+  const { clientes } = useClientes();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Nova obrigação:', formData);
+    setIsSubmitting(true);
+
+    // Localiza o cliente pelo ID
+    const selectedCliente = clientes.find(c =>
+      String(c.id) === formData.cliente ||
+      c.nome === formData.cliente // fallback para antigos valores mockados
+    );
+    const cliente_id = selectedCliente ? selectedCliente.id : null;
+
+    const obrigacaoInsert = {
+      cliente_id,
+      tipo: formData.tipo,
+      valor: formData.valor ? Number(formData.valor) : null,
+      vencimento: formData.vencimento,
+      status: 'pendente'
+    };
+    const { error } = await supabase.from('obrigacoes').insert([obrigacaoInsert]);
+    if (error) {
+      toast({
+        title: "Erro ao cadastrar",
+        description: error.message,
+        variant: "destructive"
+      });
+      setIsSubmitting(false);
+      return;
+    }
     toast({
       title: "Obrigação cadastrada",
       description: "Obrigação foi cadastrada com sucesso!",
     });
+    window.dispatchEvent(new CustomEvent("obrigacoes:recarregar"));
     setOpen(false);
     setFormData({
       cliente: '',
@@ -32,6 +62,7 @@ export const NovaObrigacaoModal = () => {
       vencimento: '',
       valor: ''
     });
+    setIsSubmitting(false);
   };
 
   return (
@@ -54,9 +85,9 @@ export const NovaObrigacaoModal = () => {
                 <SelectValue placeholder="Selecione o cliente" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="tech-solutions">Tech Solutions LTDA</SelectItem>
-                <SelectItem value="joao-silva">João Silva ME</SelectItem>
-                <SelectItem value="digital-agency">Digital Agency</SelectItem>
+                {clientes.map(c => (
+                  <SelectItem key={c.id} value={String(c.id)}>{c.nome}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -99,10 +130,12 @@ export const NovaObrigacaoModal = () => {
             />
           </div>
           <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>
               Cancelar
             </Button>
-            <Button type="submit">Cadastrar</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Cadastrando..." : "Cadastrar"}
+            </Button>
           </div>
         </form>
       </DialogContent>

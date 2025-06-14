@@ -8,9 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Plus } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useClientes } from "@/hooks/useClientes";
 
 export const NovoServicoModal = () => {
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     client: '',
     type: '',
@@ -20,14 +23,43 @@ export const NovoServicoModal = () => {
     value: ''
   });
   const { toast } = useToast();
+  const { clientes } = useClientes();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Novo serviço:', formData);
+    setIsSubmitting(true);
+    // Localiza o cliente pelo ID
+    const selectedCliente = clientes.find(c =>
+      String(c.id) === formData.client ||
+      c.nome === formData.client // fallback para antigos valores mockados
+    );
+    const cliente_id = selectedCliente ? selectedCliente.id : null;
+
+    const servicoInsert = {
+      cliente_id,
+      type: formData.type,
+      description: formData.description,
+      competence: formData.competence,
+      due_date: formData.dueDate,
+      value: formData.value ? Number(formData.value) : null,
+      status: "pendente"
+    };
+    const { error } = await supabase.from('servicos').insert([servicoInsert]);
+    if (error) {
+      toast({
+        title: "Erro ao cadastrar",
+        description: error.message,
+        variant: "destructive"
+      });
+      setIsSubmitting(false);
+      return;
+    }
     toast({
       title: "Serviço cadastrado",
       description: "Serviço foi cadastrado com sucesso!",
     });
+    // Atualizar telas conectadas (exemplo: Serviços)
+    window.dispatchEvent(new CustomEvent("servicos:recarregar"));
     setOpen(false);
     setFormData({
       client: '',
@@ -37,6 +69,7 @@ export const NovoServicoModal = () => {
       dueDate: '',
       value: ''
     });
+    setIsSubmitting(false);
   };
 
   return (
@@ -59,9 +92,9 @@ export const NovoServicoModal = () => {
                 <SelectValue placeholder="Selecione o cliente" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="tech-solutions">Tech Solutions LTDA</SelectItem>
-                <SelectItem value="joao-silva">João Silva ME</SelectItem>
-                <SelectItem value="digital-agency">Digital Agency</SelectItem>
+                {clientes.map(c => (
+                  <SelectItem key={c.id} value={String(c.id)}>{c.nome}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -122,10 +155,12 @@ export const NovoServicoModal = () => {
             />
           </div>
           <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>
               Cancelar
             </Button>
-            <Button type="submit">Cadastrar</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Cadastrando..." : "Cadastrar"}
+            </Button>
           </div>
         </form>
       </DialogContent>
