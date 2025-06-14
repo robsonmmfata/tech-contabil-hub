@@ -10,7 +10,13 @@ import { Badge } from "@/components/ui/badge";
 import { useAlertas } from "@/hooks/useAlertas";
 
 export const Header = () => {
-  const alertas = useAlertas();
+  const {
+    alertas,
+    isLoading,
+    erro
+    // inserirAlerta,
+    // recarregar
+  } = useAlertas();
 
   return (
     <header className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-6">
@@ -71,4 +77,3 @@ export const Header = () => {
     </header>
   );
 };
-
